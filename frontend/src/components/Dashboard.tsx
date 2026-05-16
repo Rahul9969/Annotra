@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
+import { isCloudBrowser, localFolderAvailable } from '../apiBase';
 import AnnotraBrand from './AnnotraBrand';
 import {
   getValidDriveAccessToken,
@@ -198,7 +199,15 @@ export default function Dashboard({
         <button
           type="button"
           onClick={onCreateNew}
-          className="text-xs px-3 py-1.5 rounded bg-ocean-teal text-ocean-deep font-semibold hover:opacity-90"
+          disabled={!localFolderAvailable()}
+          title={
+            localFolderAvailable()
+              ? undefined
+              : isCloudBrowser()
+                ? 'Use Google Drive in the cloud app, or the desktop app for local folders'
+                : 'Requires the Electron desktop app'
+          }
+          className="text-xs px-3 py-1.5 rounded bg-ocean-teal text-ocean-deep font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           + Local folder
         </button>
@@ -223,13 +232,21 @@ export default function Dashboard({
         ) : projects.length === 0 ? (
           <div className="glass rounded-xl p-8 max-w-lg text-center">
             <p className="text-gray-400 text-sm mb-4">
-              Create a project from a local folder or a Google Drive folder link (no local copy required).
+              {isCloudBrowser()
+                ? 'Create a project from a Google Drive folder link (local disk folders need the desktop app).'
+                : 'Create a project from a local folder or a Google Drive folder link (no local copy required).'}
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               <button
                 type="button"
                 onClick={onCreateNew}
-                className="text-sm px-4 py-2 rounded bg-ocean-teal text-ocean-deep font-medium"
+                disabled={!localFolderAvailable()}
+                title={
+                  localFolderAvailable()
+                    ? undefined
+                    : 'Local folders require the Annotra desktop app'
+                }
+                className="text-sm px-4 py-2 rounded bg-ocean-teal text-ocean-deep font-medium disabled:opacity-40"
               >
                 Local folder
               </button>

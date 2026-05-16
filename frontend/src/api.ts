@@ -1,8 +1,6 @@
 import { getValidDriveAccessToken } from './driveAuth';
 import { apiBase, wsBase } from './apiBase';
 
-const BASE = apiBase();
-
 type RequestOpts = RequestInit & { skipDriveAuth?: boolean };
 
 async function request<T>(path: string, options?: RequestOpts): Promise<T> {
@@ -15,7 +13,7 @@ async function request<T>(path: string, options?: RequestOpts): Promise<T> {
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(`${apiBase()}${path}`, {
     ...options,
     headers,
   });
@@ -95,7 +93,7 @@ export const api = {
       body: JSON.stringify({ path }),
     }),
 
-  imageMediaUrl: (imageId: number) => `${BASE}/images/${imageId}/media`,
+  imageMediaUrl: (imageId: number) => `${apiBase()}/images/${imageId}/media`,
 
   listProjects: () => request<import('./types').ProjectInfo[]>('/projects'),
 

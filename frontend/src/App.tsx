@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api';
-import { backendOfflineHint } from './apiBase';
+import { backendOfflineHint, isCloudBrowser, localFolderAvailable } from './apiBase';
 import AnnotationCanvas from './components/AnnotationCanvas';
 import BatchProgressModal from './components/BatchProgress';
 import Dashboard from './components/Dashboard';
@@ -227,8 +227,12 @@ export default function App() {
   );
 
   const openFolder = async () => {
-    if (!window.marineAPI) {
-      alert('Open folder requires the Electron desktop app.');
+    if (!localFolderAvailable()) {
+      alert(
+        isCloudBrowser()
+          ? 'Local folders are not available in the cloud app. Create a Google Drive project, or use the Annotra desktop app.'
+          : 'Local folders require the Electron desktop app (npm run dev:electron from marine-annotation-studio).',
+      );
       return;
     }
     const folder = await window.marineAPI.openFolder();

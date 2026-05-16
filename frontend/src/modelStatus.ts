@@ -1,4 +1,8 @@
-import { apiMisconfiguredForCloud } from './apiBase';
+import {
+  apiMisconfiguredForCloud,
+  backendOfflineHint,
+  isCloudBrowser,
+} from './apiBase';
 import type { ModelLoadState } from './hooks/useModelHealth';
 
 export function modelsCanAnnotate(modelState: ModelLoadState): boolean {
@@ -15,7 +19,10 @@ export function modelStatusLabel(
 
   if (!backendOk || modelState === 'unknown') {
     if (apiMisconfiguredForCloud()) {
-      return 'API URL not set — add VITE_API_URL on Vercel (your Render URL) and redeploy';
+      return 'API URL not set — add VITE_API_URL on Vercel and redeploy';
+    }
+    if (isCloudBrowser()) {
+      return 'API unreachable — check Render service';
     }
     return 'Backend offline — start API on port 8765';
   }
@@ -24,11 +31,14 @@ export function modelStatusLabel(
     if (modelsLoaded.length > 0) {
       return `Loading models (${modelsLoaded.join(', ')})…`;
     }
-    return 'Loading AI models (best.pt, TFLite, YOLO-World)…';
+    return isCloudBrowser()
+      ? 'Loading AI models on server (first boot may take several minutes)…'
+      : 'Loading AI models (best.pt, YOLO-World)…';
   }
 
   if (modelState === 'error') {
-    return modelError ? `Model error: ${modelError}` : 'Model load failed — check backend terminal';
+    const where = isCloudBrowser() ? 'Render logs' : 'backend terminal';
+    return modelError ? `Model error: ${modelError}` : `Model load failed — check ${where}`;
   }
 
   return 'AI not ready';
@@ -45,16 +55,15 @@ export function modelStatusDetail(
   }
 
   if (!backendOk || modelState === 'unknown') {
-    if (apiMisconfiguredForCloud()) {
-      return 'Auto is disabled until VITE_API_URL points at your deployed API (e.g. https://annotra-gzdf.onrender.com).';
-    }
-    return 'Auto is disabled until the backend is running (uvicorn on port 8765).';
+    return backendOfflineHint();
   }
 
   if (modelState === 'loading' || modelState === 'not_loaded') {
     const partial = modelsLoaded.length
       ? ` Loaded so far: ${modelsLoaded.join(', ')}.`
-      : ' First load can take 1–3 minutes.';
+      : isCloudBrowser()
+        ? ' First load on Render CPU can take 5–15 minutes.'
+        : ' First load can take 1–3 minutes.';
     return `Auto is disabled while models load.${partial} Please wait.`;
   }
 
