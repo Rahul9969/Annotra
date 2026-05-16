@@ -1,0 +1,22 @@
+{
+  "name": "marine-annotation-studio",
+  "version": "1.0.0",
+  "description": "Local-first Marine Species Auto-Annotation Studio",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently -k \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:electron\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && python -m uvicorn app.main:app --host 127.0.0.1 --port 8765 --reload",
+    "kill:backend": "npx --yes kill-port 8765",
+    "dev:electron": "wait-on http://127.0.0.1:5173 http-get://127.0.0.1:8765/health && cross-env NODE_ENV=development electron .",
+    "build": "cd frontend && npm run build",
+    "start": "cross-env NODE_ENV=production electron .",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && pip install -r requirements.txt"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.3.3",
+    "wait-on": "^8.0.1"
+  }
+}

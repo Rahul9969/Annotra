@@ -1,0 +1,35 @@
+# Render Blueprint — Annotra API (frontend deploy separately on Vercel)
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: annotra-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: standard
+    region: singapore
+    healthCheckPath: /health
+    numInstances: 1
+    disk:
+      name: annotra-data
+      mountPath: /data
+      sizeGB: 20
+    envVars:
+      - key: MARINE_DB_PATH
+        value: /data/annotations.db
+      - key: MARINE_DRIVE_CACHE_DIR
+        value: /data/drive-cache
+      - key: MARINE_DEVICE
+        value: cpu
+      - key: MARINE_ENABLE_OPEN_VOCAB
+        value: "true"
+      - key: MARINE_BATCH_USE_OPEN_VOCAB
+        value: "true"
+      - key: MARINE_GOOGLE_OAUTH_REDIRECT_URI
+        sync: false
+      - key: MARINE_GOOGLE_OAUTH_FRONTEND_REDIRECT
+        sync: false
+      - key: MARINE_GOOGLE_CLIENT_ID
+        sync: false
+      - key: MARINE_GOOGLE_CLIENT_SECRET
+        sync: false

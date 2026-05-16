@@ -1,0 +1,527 @@
+# Auto-generated from species_mapping.csv — do not edit by hand
+# Species: 498
+
+# Generic marine
+fish
+marine fish
+reef fish
+pelagic fish
+juvenile fish
+crab
+lobster
+shrimp
+prawn
+squid
+octopus
+jellyfish
+ray
+shark
+eel
+seahorse
+starfish
+sea urchin
+coral
+sponge
+sea cucumber
+mollusk
+marine invertebrate
+
+# Species (common names)
+Starry Triggerfish
+Flat Needlefish
+Bengal Sergeant
+Banded Sergeant
+Blackspot Sergeant
+Indo-Pacific Sergeant Major
+Wahoo
+Goldsilk Seabream
+Bengal Yellowfin Seabream
+Eyespot Surgeonfish
+Dark Surgeonfish
+Eyestripe Surgeonfish
+White-spine Surgeonfish
+Powder Blue Tang
+Striped Surgeonfish
+Yellowmask Surgeonfish
+Eyeline Surgeonfish
+Lieutenant Surgeonfish
+Whitetail Surgeonfish
+Convict Surgeonfish
+Mimic Surgeonfish
+Yellowfin Surgeonfish
+Greenspotted Goby
+Redmouth Grouper
+African Pompano
+Razorbelly Trevally
+Herring Scad
+Unicorn Leatherjacket
+Scrawled Filefish
+Commerson's Glassy
+Broad-banded Shrimpgoby
+Gorgeous Shrimpgoby
+Unknown
+Clark's Anemonefish
+Blackfin Anemonefish
+Yellowtail Wrasse
+Slender Grouper
+Smalltooth Jobfish
+Threespot Angelfish
+Yellowtail Angelfish
+Green Jobfish
+Threadfin Sea Catfish
+White-spotted Puffer
+Yellow-eyed Puffer
+Guineafowl Puffer
+Blackspotted Puffer
+Reticulated Puffer
+Starry Puffer
+False Cleanerfish
+Alligator Gar
+Longfin Trevally
+Port Hedland Trevally
+Barred Yellowtail Scad
+Pacific Trumpetfish
+Bullet Tuna
+Frigate Tuna
+Largesnout Goby
+Spotfin River Goby
+Orangestripe Triggerfish
+Clown Triggerfish
+Titan Triggerfish
+Cocos Frillgoby
+Dusky Frillgoby
+Meggitt's Frillgoby
+Redspotted Rockskipper
+Axilspot Hogfish
+Diana's Hogfish
+Blue-spotted Mudskippers
+Boddart's Blue-spotted Mudskipper
+Dussumier's Mudskipper
+Great Blue-spotted Mudskipper
+Wire Coral Goby
+Crimsontip Gudgeon
+Yellowtail Fusilier
+Lunar Fusilier
+Variable-lined Fusilier
+Yellowback Fusilier
+Spotted Oceanic Triggerfish
+Peter's Toby
+Blacksaddle Toby
+Blacktip Trevally
+Giant Trevally
+Black Trevally
+Bluefin Trevally
+Brassy Trevally
+Bigeye Trevally
+Brown Pygmy Angelfish
+Peacock Grouper
+Chocolate Grouper
+Bluelined Rockcod
+Coral Grouper
+Saddle Grouper
+Tomato Grouper
+Spotted Parrotfish
+Andaman Butterflyfish
+Threadfin Butterflyfish
+Eclipse Butterflyfish
+Speckled Butterflyfish
+Red-tailed Butterflyfish
+Indian Vagabond Butterflyfish
+Saddleback Butterflyfish
+Spotted Butterflyfish
+Raccoon Butterflyfish
+Blackback Butterflyfish
+Meyer's Butterflyfish
+Eightband Butterflyfish
+Triangular Butterflyfish
+Chevron Butterflyfish
+Indian Redfin Butterflyfish
+Vagabond Butterflyfish
+Yellowhead Butterflyfish
+Milkfish
+Tripletail Maori Wrasse
+Napoleon Wrasse
+Cigar Wrasse
+Fiveline Cardinalfish
+Milkspot Toadfish
+Bengal Reticulated Puffer
+Dorab Wolf Herring
+Pink-margined Parrotfish
+Indian Bullethead Parrotfish
+Roundhead Parrotfish
+Chromis
+Black-axil Chromis
+Ternate Chromis
+Blue-green Chromis
+Indian Surge Demoiselle
+Grey Demoiselle
+Onespot Demoiselle
+Exquisite Wrasse
+Pixy Hawkfish
+Stocky Hawkfish
+Carpet Eel Blenny
+African Coris
+Queen Coris
+Common Dolphinfish
+Network Pipefish
+Reeftop Pipefish
+Maude's Shrimpgoby
+Lined Bristletooth
+Shortspine Porcupinefish
+Lyretail Hawkfish
+Oriental Flying Gurnard
+Commerson's Sole
+Indian Ocean Humbug
+Indian Dascyllus
+Three-spot Dascyllus
+Unknown
+Zebra Lionfish
+Pugnose Ponyfishes
+Painted Sweetlips
+Ceylon Green Puffer
+Unknown
+Longspined Porcupinefish
+Spotted Porcupinefish
+Blackblotched Porcupinefish
+Barred Soapfish
+Spotted Sicklefish
+Sharksucker
+Snowflake Moray
+Lined Combtooth Blenny
+Little Combtooth Blenny
+Rainbow Runner
+Brown Spine-cheek Gudgeon
+Fourfinger Threadfin
+Squaretail Mullet
+Blackspotted Rockskipper
+Vermiculated Rockskipper
+Slingjaw Wrasse
+Areolate Grouper
+Duskytail Grouper
+Whitespotted Grouper
+Goldspotted Rockcod
+Cloudy Grouper
+Blacktip Grouper
+Blue-and-yellow Grouper
+Giant Grouper
+Longspine Grouper
+Snubnose Grouper
+Malabar Grouper
+Honeycomb Grouper
+Camouflage Grouper
+Foursaddle Grouper
+Dragon Seamoth
+Mackerel Tuna
+Striped Eviota
+Terry's Pygmygoby
+Indopacific Tropical Sand Goby
+Blue-spotted Cornetfish
+Forceps Butterflyfish
+Longnose Butterflyfish
+Toothed Ponyfish
+Threadfin Silverbiddy
+Common Silverbiddy
+Tank Goby
+Golden Trevally
+Striped Large-eye Bream
+Lemon Coralgoby
+Green Bird Wrasse
+Lined Soapfish
+Zebra Moray
+Dogtooth Tuna
+Masked Moray
+Laced Moray
+Yellowmargin Moray
+Giant Moray
+Whitemouth Moray
+Peppered Moray
+Highfin Moray
+White-eyed Moray
+Undulated Moray
+Checkerboard Wrasse
+Cloud Wrasse
+Bubblefin Wrasse
+Zigzag Wrasse
+Bombay Duck
+six-lined grunter
+Banded Mulletgoby
+Barred Thicklip
+Blackeye Thicklip
+Black-barred Halfbeak
+Black Pyramid Butterflyfish
+Longfin Bannerfish
+Schooling Bannerfish
+Masked Bannerfish
+Phantom Bannerfish
+Singular Bannerfish
+Common Seahorse
+Japanese Seahorse
+Three-spot Seahorse
+Indian Longnose Parrotfish
+Ringed Slender Wrasse
+Pastel Ring Wrasse
+Dussumier's Rockskipper
+Rippled Rockskipper
+Lined Rockskipper
+Ornate Sandgoby
+Black Marlin
+Sailfish
+Striped Marlin
+Goldstripe Ponyfish
+Skipjack Tuna
+Yellowstripe Goby
+Grey Drummer
+Highfin Chub
+Brassy Drummer
+Bicolor Cleaner Wrasse
+Bluestreak Cleaner Wrasse
+False Trevally
+Longhorn Cowfish
+Smooth Puffer
+Rough Golden Puffer
+Common Ponyfish
+Orangespotted Emperor
+Redspot Emperor
+Smalltooth Emperor
+Spangled Emperor
+Orangestriped Emperor
+Longnose Emperor
+Ornate Emperor
+Yellowlip Emperor
+Atlantic Tripletail
+Mangrove Red Snapper
+Two-spot Red Snapper
+Blackspot Snapper
+Blacktail Snapper
+Humpback Snapper
+Indian Snapper
+Golden Snapper
+Bluestriped Snapper
+Darktail Snapper
+Bigeye Snapper
+Onespot Snapper
+Fiveline Snapper
+Speckled Snapper
+Black-and-white Snapper
+Ornate Leopard Wrasse
+Blue Marlin
+Torpedo Scad
+Indo-Pacific Tarpon
+Smith's Fangblenny
+Black-finned Triggerfish
+Razor Moonfish
+Bump-head Mola
+Diamondfish
+Humpnose Bigeye Bream
+Redfin Bream
+Sea Mullet
+White Mullet
+Tiger Dwarf Goby
+Yellowstripe Goatfish
+Yellowfin Goatfish
+Common Pike-conger
+Harlequin Snake Eel
+Tiger Snake Eel
+Shadowfin Soldierfish
+Crimson Soldierfish
+Violet Soldierfish
+Whitemargin Unicornfish
+Humpback Unicornfish
+Paletail Unicornfish
+Elegant Unicornfish
+Sleek Unicornfish
+Slender Unicornfish
+Humpnose Unicornfish
+Bluespine Unicornfish
+Bignose Unicornfish
+Redfin Anthias
+Fire Dartfish
+Japanese Threadfin Bream
+Silver Squirrelfish
+Spotfin Squirrelfish
+Regal Demoiselle
+Rockmover Wrasse
+Spotnape Ponyfish
+Redtooth Triggerfish
+Muzzled Blenny
+Indian Ricefish
+Giant Gourami
+Cook's Cardinalfish
+Bullseye Cardinalfish
+Yellow Boxfish
+Spotted Boxfish
+Horn-nose Boxfish
+Tigertooth Croaker
+Longnose Hawkfish
+Longnose Filefish
+Chinese Silver Pomfret
+Iridescent Shark
+Pangas catfish
+Arc-eye Hawkfish
+Freckled Hawkfish
+Spotted Sandperch
+Black Pomfret
+Dot-and-dash Goatfish
+Goldsaddle Goatfish
+Yellowspot Goatfish
+Longbarbel Goatfish
+Indian Doublebar Goatfish
+Giant Mudskipper
+Asian Dwarf Mudskipper
+Barred Mudskipper
+Gold-spotted Mudskipper
+Dusky-gilled Mudskipper
+Yellow-spotted Mudskipper
+Crested Sabretooth Blenny
+Rice-paddy Eel
+Bluestriped Fangblenny
+Piano Fangblenny
+Spadefishes
+Round Batfish
+Dusky Batfish
+Longfin Batfish
+Longnose Trevally
+Bartail Flathead
+Harlequin Sweetlips
+Blubberlip
+Oriental Sweetlips
+Blackbar Damselfish
+Squaretail Coralgrouper
+Blacksaddle Coralgrouper
+Eel Catfish
+Striped Eel Catfish
+Bluering Angelfish
+Emperor Angelfish
+Halfmoon Angelfish
+Semicircle Angelfish
+Peacock Damsel
+Threespot Damsel
+Barred Javelin
+Crescent-tail Bigeye
+Sleepy Goby
+Indian Halibut
+Lyretail Anthias
+Elongate Mudskipper
+Yellowmargin Triggerfish
+Blue Triggerfish
+Snubnose Gobies
+Spiketail Gourami
+Twotone Dartfish
+Spottail Dartfish
+Pearly Dartfish
+Yellowband Fusilier
+Neon Fusilier
+Indian Lionfish
+Plaintail Lionfish
+Spotfin Lionfish
+African Lionfish
+Clearfin Lionfish
+Sailfin Catfishes
+Indian Half-and-half Chromis
+Regal Angelfish
+Cobia
+Longjaw Mackerel
+Common Remora
+Tarwhine
+Lagoon Triggerfish
+Wedgetail Triggerfish
+Jewelled Blenny
+Unknown
+Tailspot Squirrelfish
+Red Squirrelfish
+Large-scaled Grinner
+Bearded Mudskipper
+Sixband Parrotfish
+Blue-barred Parrotfish
+Swarthy Parrotfish
+Greencheek Parrotfish
+Palenose Parrotfish
+Redlip Parrotfish
+Five-saddle Parrotfish
+Tricolour Parrotfish
+Spotted Scat
+Bridled Monocle Bream
+Whitecheek Monocle Bream
+Giant Queenfish
+Lesser Queenfish
+Needleskin Queenfish
+Narrow-banded Spanish Mackerel
+Devil Scorpionfish
+Diamond Trevally
+Yellowspotted Scorpionfish
+Bigeye Scad
+Yellowstripe Scad
+White-spotted Rabbitfish
+Java Rabbitfish
+Scribbled Rabbitfish
+Maze Rabbitfish
+Northern Whiting
+Tiger Sole
+Robust Ghostpipefish
+Great Barracuda
+Pickhandle Barracuda
+Striped Barracuda
+Military Barracuda
+Blackfin Barracuda
+Jewel Damsel
+Dusky Gregory
+Bluntsnout Gregory
+Planehead Filefish
+Whiteline Wrasse
+Cutribbon Wrasse
+Three-line Wrasse
+Grey Knight Goby
+Hornpike Longtom
+Blackspot Longtom
+Gangetic Moray
+Lei Triggerfish
+Flagtail Triggerfish
+Bridled Triggerfish
+Reef Stonefish
+Double-end Pipehorse
+Bluestripe Lizardfish
+Variegated Lizardfish
+Leaf Scorpionfish
+Oblong Blowfish
+Crescent Grunter
+Spinycheek Grunter
+Largescale Grunter
+Humpback Turretfish
+Blue-headed Wrasse
+Sixbar Wrasse
+Jansen's Wrasse
+Moon Wrasse
+Yellowfin Tuna
+Longtail Tuna
+Spotted Archerfish
+Banded Archerfish
+Painted Grinner
+Smallspotted Dart
+Snubnose Dart
+Yellowtail Scad
+Bentstick Pipefish
+Shortnose Tripodfish
+Largehead Hairtail
+Banded Gourami
+Three Spot Gourami
+Croaking Gourami
+Coastal Trevally
+Yellow Spotted Trevally
+Houndfish
+Unknown
+Freckled Goatfish
+Whitemouth Trevally
+Orange-dashed Goby
+Sixspot Glidergoby
+Bluestreak Goby
+Yellow-edged Lyretail
+Schooling Cardinalfish
+Freshwater Garfish
+Broadbill Swordfish
+Mangrove Cardinalfish
+Hairfin Goby
+Moorish Idol
+Indian Sailfin Tang
+Brown Tang
+Unknown
+Northern River Garfish
