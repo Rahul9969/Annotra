@@ -2,9 +2,6 @@
 const DEFAULT_LOCAL_API = 'http://127.0.0.1:8765';
 
 export function apiBase(): string {
-  if (isCloudBrowser()) {
-    return '/api';
-  }
   const raw = import.meta.env.VITE_API_URL || DEFAULT_LOCAL_API;
   return String(raw).replace(/\/$/, '');
 }
@@ -62,11 +59,5 @@ export function backendOfflineHint(): string {
 }
 
 export function wsBase(): string {
-  const base = apiBase();
-  if (base.startsWith('/')) {
-    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = typeof window !== 'undefined' ? window.location.host : '';
-    return `${protocol}//${host}${base}`;
-  }
-  return base.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
+  return apiBase().replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
 }
