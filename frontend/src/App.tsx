@@ -43,19 +43,13 @@ export default function App() {
   const [route, setRoute] = useState<'dashboard' | 'workspace'>('dashboard');
   const [search, setSearch] = useState('');
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
-  const [backendOk, setBackendOk] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { modelState, modelsLoaded, modelError, modelsReady } = useModelHealth();
+  const { modelState, modelsLoaded, modelError, modelsReady, backendOk } = useModelHealth();
 
   useEffect(() => {
     api.getAISettings().then(setAISettings).catch(() => undefined);
   }, [setAISettings]);
 
-  useEffect(() => {
-    api.health()
-      .then(() => setBackendOk(true))
-      .catch(() => setBackendOk(false));
-  }, [modelState]);
 
   useEffect(() => {
     if (route !== 'workspace' || !project?.id) return;

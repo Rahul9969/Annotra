@@ -7,6 +7,7 @@ export function useModelHealth(pollMs = 1500) {
   const [modelState, setModelState] = useState<ModelLoadState>('unknown');
   const [modelsLoaded, setModelsLoaded] = useState<string[]>([]);
   const [modelError, setModelError] = useState<string | null>(null);
+  const [backendOk, setBackendOk] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -15,6 +16,7 @@ export function useModelHealth(pollMs = 1500) {
       try {
         const h = await api.health();
         if (cancelled) return;
+        setBackendOk(true);
         const status = (h.yolo_status ?? 'not_loaded') as ModelLoadState;
         setModelState(status);
         setModelsLoaded(h.models_loaded ?? []);
@@ -22,6 +24,7 @@ export function useModelHealth(pollMs = 1500) {
         return status;
       } catch {
         if (!cancelled) {
+          setBackendOk(false);
           setModelState('unknown');
           setModelsLoaded([]);
           setModelError(null);
@@ -49,5 +52,5 @@ export function useModelHealth(pollMs = 1500) {
 
   const modelsReady = modelState === 'ready';
 
-  return { modelState, modelsLoaded, modelError, modelsReady };
+  return { modelState, modelsLoaded, modelError, modelsReady, backendOk };
 }
