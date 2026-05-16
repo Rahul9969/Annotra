@@ -1,8 +1,10 @@
 /** Default API when VITE_API_URL is unset (local dev, Electron, vite preview on localhost). */
 const DEFAULT_LOCAL_API = 'http://127.0.0.1:8765';
 
-/** API origin — set VITE_API_URL on Vercel/Netlify; leave unset for local/Electron. */
 export function apiBase(): string {
+  if (isCloudBrowser()) {
+    return '/api';
+  }
   const raw = import.meta.env.VITE_API_URL || DEFAULT_LOCAL_API;
   return String(raw).replace(/\/$/, '');
 }
@@ -60,5 +62,11 @@ export function backendOfflineHint(): string {
 }
 
 export function wsBase(): string {
-  return apiBase().replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
+  const base = apiBase();
+  if (base.startsWith('/')) {
+    const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = typeof window !== 'undefined' ? window.location.host : '';
+    return `${protocol}//${host}${base}`;
+  }
+  return base.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
 }
