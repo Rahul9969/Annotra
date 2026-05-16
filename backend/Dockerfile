@@ -19,6 +19,9 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
     && pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir "git+https://github.com/ultralytics/CLIP.git"
 
+# Pre-download YOLO-World weights during build to prevent cold-start latency
+RUN python -c "from ultralytics import YOLO; YOLO('yolov8s-worldv2.pt')"
+
 COPY app ./app
 COPY data ./data
 COPY labels_65.txt ./labels_65.txt
