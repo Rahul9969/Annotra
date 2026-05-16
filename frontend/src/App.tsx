@@ -235,12 +235,13 @@ export default function App() {
       );
       return;
     }
-    const folder = await window.marineAPI.openFolder();
+    const marine = window.marineAPI!;
+    const folder = await marine.openFolder();
     if (!folder) return;
 
     setLoading(true);
     try {
-      const files = await window.marineAPI.scanFolder(folder, true);
+      const files = await marine.scanFolder(folder, true);
       if (!files.length) {
         alert('No images found in that folder.');
         return;
