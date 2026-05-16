@@ -24,16 +24,14 @@ COPY labels_65.txt ./labels_65.txt
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
-# Required + recommended weights (must exist locally before build — not in git)
+# Required weights (must be in Git / build context)
 COPY best.pt mobile_sam.pt ./
-# Optional: bake World weights to avoid download on cold start (uncomment if file present)
-# COPY yolov8s-worldv2.pt ./
-COPY model_nano32.tflite model32.tflite ./
+# yolov8s-worldv2.pt — downloaded on first container start via docker-entrypoint.sh
 
 ENV MARINE_CUSTOM_YOLO=best.pt
 ENV MARINE_SAM_MODEL=mobile_sam.pt
 ENV MARINE_OPEN_VOCAB_MODEL=yolov8s-worldv2.pt
-ENV MARINE_TFLITE_MODELS=model_nano32.tflite,model32.tflite
+ENV MARINE_TFLITE_MODELS=
 ENV MARINE_DEVICE=cpu
 ENV MARINE_FAST_MODE_USE_TFLITE=false
 ENV MARINE_DB_PATH=/data/annotations.db
