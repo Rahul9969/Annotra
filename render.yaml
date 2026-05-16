@@ -4,8 +4,9 @@ services:
   - type: web
     name: annotra-api
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    # Use repo-root Dockerfile (weights live in backend/)
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: standard
     region: singapore
     healthCheckPath: /health

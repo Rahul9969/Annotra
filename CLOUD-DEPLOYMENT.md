@@ -122,7 +122,8 @@ On Render: Web Service → **Existing image** → paste `ghcr.io/YOUR_USER/annot
 
 ### Repo files for cloud
 
-- `backend/Dockerfile` — copies `best.pt`, `mobile_sam.pt`, TFLite into `/app`
+- `Dockerfile` (repo root) — Render build; copies `backend/best.pt`, `backend/mobile_sam.pt`
+- `backend/Dockerfile` — local build when context is `backend/`
 - `backend/docker-entrypoint.sh` — verifies `best.pt`, downloads World model if needed
 - `render.yaml` — Render blueprint
 - `frontend/vercel.json` — SPA routing
@@ -136,7 +137,8 @@ On Render: Web Service → **Existing image** → paste `ghcr.io/YOUR_USER/annot
 
 1. Push repo to **GitHub**.
 2. [Render Dashboard](https://dashboard.render.com/) → **New** → **Blueprint** (uses `render.yaml`)  
-   **or** **New Web Service** → connect repo → **Docker**, path `backend/Dockerfile`, context `backend`.
+   **or** **New Web Service** → connect repo → **Docker**, path `Dockerfile`, context `.` (repo root).  
+   If you use `backend/Dockerfile` + context `backend`, weights must sit in `backend/` (not repo root).
 3. **Plan:** at least **Standard** (2 GB+ RAM). Upgrade if OOM during model load.
 4. **Disk:** add **20 GB** persistent disk, mount `/data` (matches `render.yaml`).
 5. **Environment variables** (sensitive → Secret):
@@ -201,7 +203,7 @@ Match `MARINE_GOOGLE_OAUTH_*` on the API exactly.
 ## Step 4 — Railway (alternative to Render)
 
 1. [Railway](https://railway.app/) → New Project → **Deploy from GitHub**.
-2. Add service → **Dockerfile** path `backend/Dockerfile`, root `backend`.
+2. Add service → **Dockerfile** path `Dockerfile`, root directory = repo root (or `backend/Dockerfile` + root `backend`).
 3. Add **Volume** mounted at `/data`; set `MARINE_DB_PATH=/data/annotations.db`.
 4. Set same env vars as Render.
 5. Generate domain → use as `VITE_API_URL` on Vercel.
@@ -309,6 +311,7 @@ Keep using [DEPLOYMENT.md](./DEPLOYMENT.md) if:
 | `dockerDesktopLinuxEngine` / pipe not found | **Start Docker Desktop** on Windows; wait until it says “Running”, then retry `docker build` |
 | `Cannot find command 'git'` / CLIP install fails | Rebuild image with latest `backend/Dockerfile` (installs `git` + CLIP at build time) |
 | `set_classes failed (No module named 'clip')` | Same — rebuild Docker image; do not rely on runtime `pip install` |
+| `"/mobile_sam.pt": not found` during Docker build | Render **Docker context** must be repo root (`.`) with **`Dockerfile`** at root, not `backend/Dockerfile` with context `.` — or set context to `backend` to match `backend/Dockerfile` |
 | `SAM load failed` / corrupt checkpoint | `mobile_sam.pt` truncated — re-download or re-copy from PC, then `docker build` again |
 | UI “Backend offline” | Wrong `VITE_API_URL`; rebuild Vercel after changing env |
 | CORS errors | Backend allows `*`; ensure API URL has no trailing slash |
