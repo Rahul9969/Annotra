@@ -1,3 +1,4 @@
+import { apiMisconfiguredForCloud } from './apiBase';
 import type { ModelLoadState } from './hooks/useModelHealth';
 
 export function modelsCanAnnotate(modelState: ModelLoadState): boolean {
@@ -13,6 +14,9 @@ export function modelStatusLabel(
   if (modelState === 'ready') return '';
 
   if (!backendOk || modelState === 'unknown') {
+    if (apiMisconfiguredForCloud()) {
+      return 'API URL not set — add VITE_API_URL on Vercel (your Render URL) and redeploy';
+    }
     return 'Backend offline — start API on port 8765';
   }
 
@@ -41,6 +45,9 @@ export function modelStatusDetail(
   }
 
   if (!backendOk || modelState === 'unknown') {
+    if (apiMisconfiguredForCloud()) {
+      return 'Auto is disabled until VITE_API_URL points at your deployed API (e.g. https://annotra-gzdf.onrender.com).';
+    }
     return 'Auto is disabled until the backend is running (uvicorn on port 8765).';
   }
 

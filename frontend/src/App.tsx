@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from './api';
+import { backendOfflineHint } from './apiBase';
 import AnnotationCanvas from './components/AnnotationCanvas';
 import BatchProgressModal from './components/BatchProgress';
 import Dashboard from './components/Dashboard';
@@ -479,7 +480,7 @@ export default function App() {
       <div className="h-full flex flex-col bg-ocean-deep">
         {!backendOk && (
           <div className="bg-amber-900/40 text-amber-200 text-xs px-4 py-2 text-center shrink-0">
-            Backend offline — run: cd marine-annotation-studio/backend && python -m uvicorn app.main:app --port 8765
+            {backendOfflineHint()}
           </div>
         )}
         <div className="flex-1 min-h-0">
