@@ -45,7 +45,7 @@ export const api = {
       using_custom_weights?: boolean;
       weights_custom?: string;
       google_drive_oauth_configured?: boolean;
-    }>('/health', { skipDriveAuth: true }),
+    }>(`/health?_t=${Date.now()}`, { skipDriveAuth: true }),
 
   driveOAuthStart: () =>
     request<{ auth_url: string; state: string }>('/drive/oauth/start', { skipDriveAuth: true }),
