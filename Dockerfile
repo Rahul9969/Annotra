@@ -37,4 +37,4 @@ ENV MARINE_DRIVE_CACHE_DIR=/data/drive-cache
 EXPOSE 8765
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8765"]
+CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8765}"]

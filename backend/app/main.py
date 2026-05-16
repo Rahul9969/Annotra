@@ -41,6 +41,6 @@ def on_startup():
         threading.Thread(target=_warm_sam, name="sam-warmup", daemon=True).start()
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {"app": "Annotra", "tagline": "Precision annotation for ML datasets", "docs": "/docs"}
