@@ -29,8 +29,9 @@ def _default_ai_settings() -> AISettings:
         device=settings.device,
         half_precision=settings.half_precision,
         yolo_model=settings.yolo_model,
+        enable_sam=settings.enable_sam2,
+        annotation_mode=settings.annotation_mode,
     )
-
 
 def _texture_subject_box(image_np: np.ndarray) -> tuple[int, int, int, int] | None:
     """Distinct blob on uniform sand/gravel (dark fish or object on bright substrate)."""
@@ -319,6 +320,13 @@ def _merge_partial_detections(
             if used[j] or j == i:
                 continue
             iou, ioa, _ = _box_metrics(boxes[i], boxes[j])
+            
+            # Prevent clustering distinct hierarchical detections (e.g. school vs individual)
+            area_i = (boxes[i][2] - boxes[i][0]) * (boxes[i][3] - boxes[i][1])
+            area_j = (boxes[j][2] - boxes[j][0]) * (boxes[j][3] - boxes[j][1])
+            if max(area_i, area_j) / max(1.0, min(area_i, area_j)) > 3.5:
+                continue
+                
             if iou >= iou_link or ioa >= ioa_link:
                 cluster.append(j)
                 used[j] = True
@@ -451,12 +459,12 @@ def _apply_folder_label(
         return fish_dets
 
     if mode == "smart":
-        distinct = {d.class_name.strip().lower() for d in dets if d.class_name}
-        if len(distinct) > 1:
-            return dets
+        # Trust the user's manual folder organization above all else.
+        # If the image is inside a valid species folder, strictly apply that folder name.
         if is_valid_species_folder(folder_class):
             for d in dets:
-                d.class_name = folder_class
+                if is_fish_like(d):
+                    d.class_name = folder_class
         return dets
 
     if is_valid_species_folder(folder_class):
@@ -558,8 +566,15 @@ def postprocess_detections(
     def _fuse_primary(detections: list[EnsembleDetection]) -> list[EnsembleDetection]:
         if len(detections) < 2:
             return list(detections)
+        # Tighten link thresholds to prevent distinct, adjacent fish in a school 
+        # from being incorrectly merged into one giant envelope.
         merged = _merge_partial_detections(
-            detections, image_w=width, image_h=height, max_union_area_ratio=min(max_area, 0.38)
+            detections, 
+            image_w=width, 
+            image_h=height, 
+            iou_link=0.35, 
+            ioa_link=0.75,
+            max_union_area_ratio=min(max_area, 0.38)
         )
         return nms_fusion(merged, fusion_iou)[:max_det]
 
@@ -681,13 +696,16 @@ def postprocess_detections(
             timing["fallback_margin_ms"] = 1.0
 
     pre_expand = list(fused)
-    if fused and settings.enable_subject_box_expand:
+    # Only expand if there's exactly ONE object. If there are multiple fish, 
+    # expanding them to the 'global subject box' causes them to all snap to the same giant box.
+    if len(fused) == 1 and settings.enable_subject_box_expand:
         fused = _expand_detections_to_subject(image_np, fused)
         fused = nms_fusion(fused, min(fusion_iou, 0.4))[:max_det]
         timing["subject_expand_ms"] = 1.0
 
     # --- SAM2 mask refinement: tighten boxes + generate polygons ---
-    if fused and settings.enable_sam2 and settings.sam2_refine_boxes and cfg.enable_sam:
+    run_sam = getattr(cfg, "annotation_mode", "both") in ("segmentation", "both")
+    if fused and settings.sam2_refine_boxes and run_sam:
         import time as _time
 
         _t0 = _time.perf_counter()
@@ -707,26 +725,116 @@ def postprocess_detections(
         # This second pass removes the newly overlapping duplicate.
         fused = nms_fusion(fused, 0.70)  # slightly higher IoU since SAM2 boxes should be nearly identical
 
+    # Ensure annotation mode is strictly respected
+    mode = getattr(cfg, "annotation_mode", "both")
+    if mode == "bounding_box":
+        for det in fused:
+            det.polygon = None
+    elif mode == "segmentation":
+        # Discard any detection that failed to generate a valid polygon
+        fused = [det for det in fused if getattr(det, "polygon", None) is not None and len(det.polygon) >= 3]
+
     min_conf = predict_conf
     fused = filter_detections(fused, width, height, min_conf, hard_max_area)
-    if not fused and pre_expand:
-        fused = filter_detections(pre_expand, width, height, min_conf, hard_max_area)
-    if not fused and model_candidates:
-        best = pick_best_detection(
-            model_candidates, width, height, max_box_area_ratio=hard_max_area, min_confidence=min_conf
-        )
-        if best:
-            fused = [best]
-            timing["best_model_box_ms"] = 1.0
-    if not fused and all_dets:
-        best = pick_best_detection(
-            all_dets, width, height, max_box_area_ratio=hard_max_area, min_confidence=min_conf
-        )
-        if best:
-            fused = [best]
-            timing["best_raw_box_ms"] = 1.0
+    
+    if mode != "segmentation":
+        if not fused and pre_expand:
+            fused = filter_detections(pre_expand, width, height, min_conf, hard_max_area)
+        if not fused and model_candidates:
+            best = pick_best_detection(
+                model_candidates, width, height, max_box_area_ratio=hard_max_area, min_confidence=min_conf
+            )
+            if best:
+                fused = [best]
+                timing["best_model_box_ms"] = 1.0
+        if not fused and all_dets:
+            best = pick_best_detection(
+                all_dets, width, height, max_box_area_ratio=hard_max_area, min_confidence=min_conf
+            )
+            if best:
+                fused = [best]
+                timing["best_raw_box_ms"] = 1.0
 
-    return fused, timing
+    if not fused:
+        return [], timing
+        
+    # --- Final Polish: Remove 'School' / Container Boxes ---
+    # If a giant box encloses 2 or more smaller boxes, it's a container (school of fish).
+    # The user wants individual annotations, so we strip these containers out.
+    final_fused = []
+    for i, d1 in enumerate(fused):
+        area1 = (d1.w * d1.h)
+        contained_count = 0
+        for j, d2 in enumerate(fused):
+            if i == j: continue
+            area2 = (d2.w * d2.h)
+            # If d1 is at least 2.5x bigger and completely contains d2
+            if area1 > area2 * 2.5:
+                # Calculate intersection area
+                ix1 = max(d1.x, d2.x)
+                iy1 = max(d1.y, d2.y)
+                ix2 = min(d1.x + d1.w, d2.x + d2.w)
+                iy2 = min(d1.y + d1.h, d2.y + d2.h)
+                inter = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+                # If d2 is at least 85% inside d1, it counts as contained
+                if inter / max(1.0, area2) >= 0.85:
+                    contained_count += 1
+        
+        # If it encloses multiple distinct objects, it's a generic container, drop it.
+        if contained_count >= 2:
+            continue
+            
+        # NEW: Active Splitting of Giant AI Boxes
+        # If the AI model naturally output a single giant box for a school of fish,
+        # we must break it up manually using CV, because the user wants individual boxes.
+        img_area = width * height
+        if area1 > img_area * 0.08:  # If box covers > 8% of the whole image
+            import cv2
+            
+            x1, y1 = max(0, int(d1.x)), max(0, int(d1.y))
+            x2, y2 = min(width, int(d1.x + d1.w)), min(height, int(d1.y + d1.h))
+            roi = image_np[y1:y2, x1:x2]
+            
+            if roi.shape[0] > 10 and roi.shape[1] > 10:
+                gray = cv2.cvtColor(roi, cv2.COLOR_RGB2GRAY)
+                blur = cv2.GaussianBlur(gray, (7, 7), 0)
+                _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
+                
+                # Morphological operations to aggressively disconnect tightly packed fish
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+                erode_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+                
+                # First erode to break thin connections (fins/tails touching)
+                eroded = cv2.erode(thresh, erode_kernel, iterations=2)
+                # Then open to remove noise
+                opened = cv2.morphologyEx(eroded, cv2.MORPH_OPEN, kernel, iterations=2)
+                # Finally dilate back slightly to restore size
+                dilated = cv2.dilate(opened, erode_kernel, iterations=2)
+                
+                contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                
+                sub_boxes = []
+                for c in contours:
+                    cx, cy, cw, ch = cv2.boundingRect(c)
+                    if cw * ch > (roi.shape[0] * roi.shape[1] * 0.05): # Must be at least 5% of the giant box
+                        sub_boxes.append(EnsembleDetection(
+                            x=float(x1 + cx),
+                            y=float(y1 + cy),
+                            w=float(cw),
+                            h=float(ch),
+                            class_name=d1.class_name,
+                            confidence=d1.confidence - 0.1,
+                            source="cv_split",
+                        ))
+                
+                # If we successfully split the giant box into multiple fish, replace it!
+                if len(sub_boxes) >= 2:
+                    final_fused.extend(sub_boxes)
+                    continue
+                    
+        final_fused.append(d1)
+
+    return final_fused, timing
 
 
 def run_pipeline(
