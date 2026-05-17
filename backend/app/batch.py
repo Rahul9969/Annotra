@@ -42,10 +42,26 @@ def _annotate_one(
             project_root=project_root,
             project_name=project_name,
         )
+        from app.schemas import AnnotationOut
+        out_anns = [
+            AnnotationOut(
+                class_name=a.class_name,
+                confidence=a.confidence,
+                x=a.x,
+                y=a.y,
+                w=a.w,
+                h=a.h,
+                rotation=0,
+                source=a.source,
+                polygon=a.polygon
+            )
+            for a in anns
+        ]
+        
         return {
             "ok": True,
             "path": image_path,
-            "annotations": [a.model_dump() for a in anns],
+            "annotations": [a.model_dump() for a in out_anns],
             "width": w,
             "height": h,
             "timing": timing,
@@ -289,6 +305,7 @@ class BatchAnnotator:
                     max_det=cfg.max_boxes,
                     project_root=project_root,
                     project_name=project_name,
+                    ai_cfg=cfg,
                 )
                 result = results[0] if results else {"ok": False, "path": path, "error": "no result"}
             except Exception as e:
@@ -311,7 +328,7 @@ class BatchAnnotator:
     def _run_legacy(self, job: BatchJob, on_progress: Callable | None):
         cfg_dict = job.ai_settings.model_dump()
         project_root, project_name = self._project_context(job.project_id)
-        pool_size = min(job.ai_settings.thread_pool_size or self.pool_size, 4)
+        pool_size = job.ai_settings.thread_pool_size or self.pool_size
         with ThreadPoolExecutor(max_workers=pool_size) as ex:
             futures = {
                 ex.submit(

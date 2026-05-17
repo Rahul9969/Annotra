@@ -49,6 +49,7 @@ def clamp_detection(det: EnsembleDetection, image_w: int, image_h: int) -> Ensem
         confidence=det.confidence,
         source=det.source,
         detected_as=det.detected_as,
+        polygon=det.polygon,
     )
 
 

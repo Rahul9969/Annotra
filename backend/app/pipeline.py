@@ -686,7 +686,28 @@ def postprocess_detections(
         fused = nms_fusion(fused, min(fusion_iou, 0.4))[:max_det]
         timing["subject_expand_ms"] = 1.0
 
-    min_conf = max(0.12, settings.min_detection_confidence * 0.5)
+    # --- SAM2 mask refinement: tighten boxes + generate polygons ---
+    if fused and settings.enable_sam2 and settings.sam2_refine_boxes and cfg.enable_sam:
+        import time as _time
+
+        _t0 = _time.perf_counter()
+        try:
+            from app.sam2_refiner import refine_detections as sam2_refine
+
+            fused = sam2_refine(image_np, fused)
+            timing["sam2_refine_ms"] = (_time.perf_counter() - _t0) * 1000
+        except Exception as exc:
+            import logging as _log
+
+            _log.getLogger(__name__).warning("SAM2 refinement failed: %s", exc)
+            timing["sam2_refine_error"] = 1.0
+
+        # Run NMS again! Grounding DINO (loose box) and YOLO (tight box) might have had < 0.55 IoU
+        # originally, but after SAM2 they will both shrink to the EXACT same tight box.
+        # This second pass removes the newly overlapping duplicate.
+        fused = nms_fusion(fused, 0.70)  # slightly higher IoU since SAM2 boxes should be nearly identical
+
+    min_conf = predict_conf
     fused = filter_detections(fused, width, height, min_conf, hard_max_area)
     if not fused and pre_expand:
         fused = filter_detections(pre_expand, width, height, min_conf, hard_max_area)
@@ -775,6 +796,7 @@ def run_pipeline(
             x=d.x, y=d.y, w=d.w, h=d.h,
             rotation=0,
             source=d.source,
+            polygon=getattr(d, "polygon", None),
         )
         for d in fused
     ]

@@ -123,6 +123,25 @@ def health():
 
     sam_st, sam_err = sam_status()
     catalog = get_catalog()
+
+    # Grounding DINO + SAM2 status
+    gdino_st, gdino_err = "disabled", None
+    sam2_st, sam2_err = "disabled", None
+    if cfg.enable_grounding_dino:
+        try:
+            from app.grounding_dino import gdino_status
+
+            gdino_st, gdino_err = gdino_status()
+        except Exception:
+            gdino_st = "not_loaded"
+    if cfg.enable_sam2:
+        try:
+            from app.sam2_refiner import sam2_status as _sam2_status
+
+            sam2_st, sam2_err = _sam2_status()
+        except Exception:
+            sam2_st = "not_loaded"
+
     return {
         "status": "ok",
         "device": ensemble.device,
@@ -152,6 +171,13 @@ def health():
         "sam_segment_enabled": cfg.enable_sam_segment,
         "sam_status": sam_st,
         "sam_error": sam_err,
+        "grounding_dino_enabled": cfg.enable_grounding_dino,
+        "grounding_dino_status": gdino_st,
+        "grounding_dino_error": gdino_err,
+        "sam2_enabled": cfg.enable_sam2,
+        "sam2_status": sam2_st,
+        "sam2_error": sam2_err,
+        "sam2_refine_boxes": cfg.sam2_refine_boxes,
         "weights_dir": str(__import__("app.model_paths", fromlist=["backend_models_dir"]).backend_models_dir()),
         "custom_yolo_resolved": cfg.custom_yolo,
         "sam_model_resolved": cfg.sam_model,
@@ -1084,7 +1110,7 @@ async def batch_start(
         body.project_id,
         images,
         prompts=body.prompts,
-        ai_settings=AISettings(thread_pool_size=body.thread_pool_size or 4),
+        ai_settings=get_ai_settings(),
         drive_access_token=drive_token,
         local_mirror_path=local_mirror,
     )
@@ -1359,6 +1385,7 @@ def get_ai_settings():
         half_precision=settings.half_precision,
         yolo_model=settings.yolo_model,
         custom_yolo=settings.custom_yolo,
+        enable_sam=getattr(settings, "enable_sam", settings.enable_sam2),
     )
 
 
@@ -1369,4 +1396,6 @@ def update_ai_settings(body: AISettings):
     for k, v in body.model_dump().items():
         if hasattr(config.settings, k):
             setattr(config.settings, k, v)
+        if k == "enable_sam":
+            config.settings.enable_sam2 = v
     return body

@@ -19,3 +19,8 @@ tqdm>=4.67.0
 google-api-python-client>=2.130.0
 google-auth-httplib2>=0.2.0
 google-auth-oauthlib>=1.2.0
+
+# Grounding DINO + SAM 2
+transformers>=4.45.0
+huggingface-hub>=0.25.0
+supervision>=0.25.0

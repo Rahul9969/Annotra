@@ -71,6 +71,14 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
+              checked={aiSettings.enable_sam}
+              onChange={(e) => setAISettings({ ...aiSettings, enable_sam: e.target.checked })}
+            />
+            Refine with SAM2 Segmentation
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
               checked={aiSettings.half_precision}
               onChange={(e) => setAISettings({ ...aiSettings, half_precision: e.target.checked })}
             />

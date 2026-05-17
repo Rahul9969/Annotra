@@ -129,6 +129,7 @@ def annotate_batch_chunk(
     max_det: int | None = None,
     project_root: str | None = None,
     project_name: str | None = None,
+    ai_cfg: AISettings | None = None,
 ) -> list[dict]:
     """
     Annotate many images per chunk: best.pt + TFLite + YOLO-World (when enabled),
@@ -147,7 +148,8 @@ def annotate_batch_chunk(
     accurate = settings.batch_accurate_mode
     use_all = settings.batch_use_all_models and accurate
     custom_imgsz = settings.batch_accurate_imgsz if accurate else settings.batch_imgsz
-    ai_cfg = AISettings(confidence=conf, max_boxes=max_det)
+    if ai_cfg is None:
+        ai_cfg = AISettings(confidence=conf, max_boxes=max_det)
 
     paths = [str(Path(p).resolve()) for p, _ in items]
     folder_classes = [fc for _, fc in items]
@@ -198,6 +200,7 @@ def annotate_batch_chunk(
                         h=d.h,
                         rotation=0,
                         source=d.source,
+                        polygon=getattr(d, "polygon", None),
                     )
                     for d in fused
                 ]
@@ -309,6 +312,7 @@ def annotate_batch_chunk(
                     h=d.h,
                     rotation=0,
                     source=d.source,
+                    polygon=getattr(d, "polygon", None),
                 )
                 for d in fused
             ]

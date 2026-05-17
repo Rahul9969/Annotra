@@ -75,6 +75,18 @@ class Settings(BaseSettings):
     sam_model: str = "mobile_sam.pt"
     magic_wand_tolerance: int = 35
 
+    # Grounding DINO — open-set text-prompted detection
+    enable_grounding_dino: bool = False
+    gdino_model: str = "IDEA-Research/grounding-dino-base"
+    gdino_box_threshold: float = 0.30
+    gdino_text_threshold: float = 0.25
+    gdino_prompts: str = "fish . shrimp . crab . lobster . squid . octopus . marine creature"
+
+    # SAM 2 — pixel-precise mask refinement for detected boxes
+    enable_sam2: bool = False
+    sam2_model: str = "sam2.1_b.pt"
+    sam2_refine_boxes: bool = True
+
     # Batch: accurate mode = same fusion as single-image Auto (all models + rescue + box expand)
     batch_fast_mode: bool = True
     batch_accurate_mode: bool = True
@@ -85,7 +97,7 @@ class Settings(BaseSettings):
     batch_open_vocab_imgsz: int = 960
     batch_inference_size: int = 8
     # If true, batch runs full run_pipeline per image (slowest, highest parity with Auto)
-    batch_use_legacy_pipeline: bool = False
+    batch_use_legacy_pipeline: bool = True
 
     # Google Drive (OAuth + API). Create credentials at Google Cloud Console.
     google_client_id: str | None = None

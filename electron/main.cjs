@@ -69,7 +69,7 @@ function createWindow() {
   });
 
   mainWindow.loadURL(FRONTEND_URL);
-  if (isDev) mainWindow.webContents.openDevTools({ mode: 'detach' });
+  // if (isDev) mainWindow.webContents.openDevTools({ mode: 'detach' });
 }
 
 app.whenReady().then(() => {

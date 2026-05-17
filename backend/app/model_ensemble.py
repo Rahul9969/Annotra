@@ -31,6 +31,7 @@ class EnsembleDetection:
     confidence: float
     source: str = "yolo"
     detected_as: str = ""  # raw class before folder relabel (for filtering coral etc.)
+    polygon: list[list[float]] | None = None  # SAM2-derived mask polygon
 
 
 def _valid_pt(path: Path) -> bool:
@@ -225,6 +226,8 @@ class ModelEnsemble:
                 self.model_error or "AI models are not loaded. Check backend logs and .env paths."
             )
 
+        import concurrent.futures
+
         timing: dict[str, float] = {}
         all_dets: list[EnsembleDetection] = []
         per_model = max_det
@@ -232,15 +235,16 @@ class ModelEnsemble:
         per_model_nms = min(settings.yolo_nms_iou, 0.55)
         within_model_iou = 0.5
 
-        for source, model, class_names in self._models:
-            if fast_folder and source == "open_vocab" and _skip_world_in_fast_folder():
-                timing["open_vocab_skipped"] = 1.0
-                continue
-            if fast_folder and not settings.fast_mode_use_tflite and source.startswith("tflite"):
-                timing[f"{source}_skipped"] = 1.0
-                continue
-
+        def _run_yolo_model(source, model, class_names):
             t0 = time.perf_counter()
+            model_timing = {}
+            if fast_folder and source == "open_vocab" and _skip_world_in_fast_folder():
+                model_timing["open_vocab_skipped"] = 1.0
+                return [], model_timing
+            if fast_folder and not settings.fast_mode_use_tflite and source.startswith("tflite"):
+                model_timing[f"{source}_skipped"] = 1.0
+                return [], model_timing
+
             try:
                 if source == "open_vocab":
                     try:
@@ -254,7 +258,6 @@ class ModelEnsemble:
                     model_conf = max(conf, settings.open_vocab_min_confidence * 0.75)
                 else:
                     model_conf = conf
-                # TFLite exports are fixed at 640; PT/World use MARINE_IMGSZ
                 infer_imgsz = 640 if source.startswith("tflite") else settings.imgsz
                 kwargs: dict[str, Any] = dict(
                     source=image_path,
@@ -300,12 +303,68 @@ class ModelEnsemble:
                             )
                         )
                 model_dets = nms_fusion(model_dets, within_model_iou)
-                all_dets.extend(model_dets)
-                timing[f"{source}_ms"] = (time.perf_counter() - t0) * 1000
+                model_timing[f"{source}_ms"] = (time.perf_counter() - t0) * 1000
                 logger.debug("%s: %d boxes after per-model NMS", source, len(model_dets))
+                return model_dets, model_timing
             except Exception as e:
                 logger.warning("Model %s failed: %s", source, e)
-                timing[f"{source}_error"] = 1.0
+                model_timing[f"{source}_error"] = 1.0
+                return [], model_timing
+
+        def _run_gdino():
+            model_timing = {}
+            if not settings.enable_grounding_dino:
+                return [], model_timing
+            try:
+                from app.grounding_dino import detect as gdino_detect, build_prompt
+                prompt = build_prompt(folder_class)
+                gdino_dets, gdino_timing = gdino_detect(
+                    image_path,
+                    prompts=prompt,
+                    box_threshold=settings.gdino_box_threshold,
+                    text_threshold=settings.gdino_text_threshold,
+                    folder_class=folder_class,
+                )
+                converted_dets = []
+                for d in gdino_dets:
+                    converted_dets.append(
+                        EnsembleDetection(
+                            x=d.x,
+                            y=d.y,
+                            w=d.w,
+                            h=d.h,
+                            class_name=d.class_name,
+                            confidence=d.confidence,
+                            source="grounding_dino",
+                            detected_as=d.detected_as or d.class_name,
+                        )
+                    )
+                model_timing.update(gdino_timing)
+                return converted_dets, model_timing
+            except Exception as e:
+                logger.warning("Grounding DINO failed: %s", e)
+                model_timing["grounding_dino_error"] = 1.0
+                return [], model_timing
+
+        # Run models concurrently to speed up CPU inference
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(self._models) + 1)) as executor:
+            futures = []
+            # Queue YOLO/TFLite models
+            for source, model, class_names in self._models:
+                futures.append(executor.submit(_run_yolo_model, source, model, class_names))
+            
+            # Queue Grounding DINO
+            if settings.enable_grounding_dino:
+                futures.append(executor.submit(_run_gdino))
+            
+            # Collect results
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    dets, model_timing = future.result()
+                    all_dets.extend(dets)
+                    timing.update(model_timing)
+                except Exception as e:
+                    logger.warning("Ensemble thread failed: %s", e)
 
         return all_dets, timing
 

@@ -399,13 +399,21 @@ export default function AnnotationCanvas() {
                     </>
                   )}
                   <Group
-                    id={`ann-${id}`}
                     x={pan.x + a.x * zoom}
                     y={pan.y + a.y * zoom}
+                    width={bw}
+                    height={bh}
+                    rotation={a.rotation ?? 0}
                     draggable={tool === 'select' && !a.locked}
                     onClick={() => selectAnnotation(id)}
+                    onDragEnd={(e) => {
+                      const newX = (e.target.x() - pan.x) / zoom;
+                      const newY = (e.target.y() - pan.y) / zoom;
+                      setAnnotations(annotations.map((ann) => ann.id === id ? { ...ann, x: newX, y: newY } : ann));
+                    }}
                   >
                   <Rect
+                    id={`ann-${id}`}
                     width={bw}
                     height={bh}
                     stroke={color}
@@ -414,6 +422,22 @@ export default function AnnotationCanvas() {
                     shadowColor={color}
                     shadowBlur={selected ? 8 : 4}
                     shadowOpacity={0.35}
+                    onTransformEnd={(e) => {
+                      const node = e.target;
+                      const scaleX = node.scaleX();
+                      const scaleY = node.scaleY();
+                      node.scaleX(1);
+                      node.scaleY(1);
+                      const rectX = node.x();
+                      const rectY = node.y();
+                      node.x(0);
+                      node.y(0);
+                      const newX = a.x + rectX / zoom;
+                      const newY = a.y + rectY / zoom;
+                      const newW = Math.max(1, a.w * scaleX);
+                      const newH = Math.max(1, a.h * scaleY);
+                      setAnnotations(annotations.map((ann) => ann.id === id ? { ...ann, x: newX, y: newY, w: newW, h: newH, rotation: node.rotation() } : ann));
+                    }}
                   />
                   {showLabels && (
                     <Group x={bw + 6} y={Math.max(0, bh / 2 - 9)}>
@@ -472,7 +496,15 @@ export default function AnnotationCanvas() {
               dash={[4, 4]}
             />
           )}
-          <Transformer ref={trRef} rotateEnabled />
+          <Transformer 
+            ref={trRef} 
+            rotateEnabled 
+            flipEnabled={false} 
+            boundBoxFunc={(oldBox, newBox) => {
+              if (newBox.width < 5 || newBox.height < 5) return oldBox;
+              return newBox;
+            }} 
+          />
         </Layer>
       </Stage>
 

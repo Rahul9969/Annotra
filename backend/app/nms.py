@@ -66,6 +66,7 @@ def nms_fusion(detections: list[_HasBox], iou_thresh: float = 0.45) -> list:
                 if ioa >= 0.55 and area_j > area_i * 1.12 and scores[j] >= scores[i] - 0.18:
                     i = j
                     keep[-1] = i
+                mask.append(False)
                 continue
             mask.append(True)
         order = rest[np.array(mask, dtype=bool)]
