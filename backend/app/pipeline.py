@@ -294,11 +294,11 @@ def _expand_detections_to_subject(
 
 def _merge_partial_detections(
     dets: list[EnsembleDetection],
+    image_w: int,
+    image_h: int,
     *,
-    image_w: int = 0,
-    image_h: int = 0,
-    iou_link: float = 0.06,
-    ioa_link: float = 0.32,
+    iou_link: float = 0.45,  # Increased from 0.06 to prevent merging distinct adjacent fish
+    ioa_link: float = 0.75,  # Increased from 0.32
     max_union_area_ratio: float = 0.36,
 ) -> list[EnsembleDetection]:
     """Union head/tail or multi-model fragments into one envelope before NMS picks a sliver."""
