@@ -3,9 +3,11 @@ import { api } from '../api';
 import { isDriveProject } from '../driveAuth';
 
 const FORMATS: { id: string; label: string; hint: string }[] = [
-  { id: 'yolo_v8', label: 'YOLOv8 (Ultralytics detection)', hint: 'images/ + labels/ + data.yaml' },
-  { id: 'yolo_v11', label: 'YOLOv11 (Ultralytics detection)', hint: 'Same layout as v8; train with yolo11n.pt' },
-  { id: 'yolo_v5', label: 'YOLOv5 (Ultralytics detection)', hint: 'Classic YOLO txt labels' },
+  { id: 'yolo_v11_box', label: 'YOLOv11 Object Detection (Bounding Box)', hint: 'Standard YOLO txt labels; train with yolo11n.pt' },
+  { id: 'yolo_v11_seg', label: 'YOLOv11 Instance Segmentation (Polygon)', hint: 'YOLO txt labels with polygon coords; train with yolo11n-seg.pt' },
+  { id: 'yolo_v8_box', label: 'YOLOv8 Object Detection (Bounding Box)', hint: 'Standard YOLO txt labels; train with yolov8n.pt' },
+  { id: 'yolo_v8_seg', label: 'YOLOv8 Instance Segmentation (Polygon)', hint: 'YOLO txt labels with polygon coords; train with yolov8n-seg.pt' },
+  { id: 'yolo_v5', label: 'YOLOv5 Object Detection', hint: 'Classic YOLO txt labels' },
   { id: 'coco', label: 'COCO JSON', hint: 'instances.json' },
   { id: 'voc', label: 'Pascal VOC XML', hint: 'One XML per image' },
   { id: 'csv', label: 'CSV spreadsheet', hint: 'Flat table of all boxes' },
@@ -25,7 +27,7 @@ export default function ExportPanel({
   localMirrorPath?: string | null;
   onClose: () => void;
 }) {
-  const [format, setFormat] = useState('yolo_v8');
+  const [format, setFormat] = useState('yolo_v11_box');
   const [reviewedOnly, setReviewedOnly] = useState(false);
   const [includePreviews, setIncludePreviews] = useState(true);
   const [createZip, setCreateZip] = useState(true);

@@ -262,10 +262,17 @@ def _export_yolo(splits, out, class_names, class_to_id, manifest, fmt: str):
             lines = []
             cid = class_to_id.get(folder_cls, 0)
             for a in anns:
-                cx = (a.x + a.w / 2) / w
-                cy = (a.y + a.h / 2) / h
-                nw, nh = a.w / w, a.h / h
-                lines.append(f"{cid} {cx:.6f} {cy:.6f} {nw:.6f} {nh:.6f}")
+                if a.polygon and len(a.polygon) >= 3 and not fmt.endswith("_box"):
+                    pts = []
+                    for px, py in a.polygon:
+                        pts.append(f"{px / w:.6f}")
+                        pts.append(f"{py / h:.6f}")
+                    lines.append(f"{cid} " + " ".join(pts))
+                else:
+                    cx = (a.x + a.w / 2) / w
+                    cy = (a.y + a.h / 2) / h
+                    nw, nh = a.w / w, a.h / h
+                    lines.append(f"{cid} {cx:.6f} {cy:.6f} {nw:.6f} {nh:.6f}")
             (lbl_dir / f"{src.stem}.txt").write_text("\n".join(lines), encoding="utf-8")
             manifest["files"].append({"split": split_name, "image": str(dst), "checksum": _checksum(dst)})
 
