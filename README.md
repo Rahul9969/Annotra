@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/banner-yolov8.png" alt="Marine Annotation Studio" width="100%">
+  <img src="assets/banner.png" alt="Marine Annotation Studio" width="100%">
   
   <h1>🐠 Marine Annotation Studio (Annotra)</h1>
   <p><strong>A high-performance, local-first annotation platform for marine datasets with multi-model AI inference pipelines.</strong></p>
