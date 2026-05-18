@@ -266,6 +266,30 @@ export default function App() {
     }
   };
 
+  const importDataset = async () => {
+    if (!localFolderAvailable()) {
+      alert(
+        isCloudBrowser()
+          ? 'Importing datasets from disk requires the Annotra desktop app.'
+          : 'Dataset import requires the Electron desktop app (npm run dev:electron).',
+      );
+      return;
+    }
+    const marine = window.marineAPI!;
+    const folder = await marine.openFolder();
+    if (!folder) return;
+
+    setLoading(true);
+    try {
+      const res = await api.importDataset(folder);
+      await enterWorkspace(res.project_id, null);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to import dataset');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const saveCurrent = async () => {
     try {
       await persistCurrent('verified');
@@ -300,6 +324,7 @@ export default function App() {
         project.id,
         prompts.split(',').map((s) => s.trim()),
         imageBase64,
+        useStore.getState().aiSettings
       );
       const withIds = res.annotations.map((a, i) => ({
         ...a,
@@ -339,7 +364,7 @@ export default function App() {
     }
   };
 
-  const batchAnnotate = async () => {
+  const batchAnnotate = async (pipelineMode?: string) => {
     if (!project) return;
     const mirror = project.local_mirror_path ?? useStore.getState().collaborationLocalRoot;
     if (isDriveProject(project)) {
@@ -366,7 +391,7 @@ export default function App() {
       const unannotated = images.filter((i) => i.status === 'unannotated').length;
       const projectTotal = imagesTotal || images.length;
       const unannotatedOnly = window.confirm(
-        `Batch: process ${unannotated} unannotated image(s)?\n\n` +
+        `${pipelineMode === 'smart_cv' ? 'Smart ' : ''}Batch: process ${unannotated} unannotated image(s)?\n\n` +
           `OK = unannotated only\nCancel = ALL ${projectTotal} images in this project`,
       );
       const { job_id, total } = await api.batchStart(
@@ -388,6 +413,8 @@ export default function App() {
       alert(e instanceof Error ? e.message : 'Batch failed');
     }
   };
+
+  const smartBatchAnnotate = () => batchAnnotate('smart_cv');
 
   const openExport = () => {
     if (!project) {
@@ -486,6 +513,7 @@ export default function App() {
           <Dashboard
             onOpenProject={enterWorkspace}
             onCreateNew={openFolder}
+            onImportDataset={importDataset}
             onCreateDrive={async (projectId) => enterWorkspace(projectId, null)}
           />
         </div>
@@ -507,7 +535,8 @@ export default function App() {
         onClearDriveCache={clearDriveCache}
         onSave={saveCurrent}
         onAutoAnnotate={autoAnnotate}
-        onBatchAnnotate={batchAnnotate}
+        onBatchAnnotate={() => batchAnnotate()}
+        onSmartBatch={smartBatchAnnotate}
         onExport={openExport}
         onSettings={() => setPanel('settings')}
         onStats={showStats}

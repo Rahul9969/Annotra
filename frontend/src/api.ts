@@ -108,6 +108,20 @@ export const api = {
   createProject: (name: string, root_path: string, class_names?: string[]) =>
     request('/projects', { method: 'POST', body: JSON.stringify({ name, root_path, class_names }) }),
 
+  importDataset: (dataset_path: string, name?: string) =>
+    request<{
+      project_id: number;
+      name: string;
+      root_path: string;
+      format: string;
+      image_count: number;
+      annotated_count: number;
+      class_count: number;
+    }>('/projects/import-dataset', {
+      method: 'POST',
+      body: JSON.stringify({ dataset_path, name }),
+    }),
+
   indexImages: (projectId: number, files: { path: string }[]) =>
     request(`/projects/${projectId}/index`, { method: 'POST', body: JSON.stringify(files) }),
 
@@ -193,6 +207,7 @@ export const api = {
     project_id?: number,
     prompts?: string[],
     image_base64?: string | null,
+    ai_settings?: import('./types').AISettings,
   ) =>
     request<{ annotations: import('./types').BBox[]; width: number; height: number; timing_ms: Record<string, number> }>(
       '/annotate',
@@ -204,6 +219,7 @@ export const api = {
           project_id,
           prompts,
           image_base64: image_base64 ?? undefined,
+          ai_settings,
         }),
       },
     ),

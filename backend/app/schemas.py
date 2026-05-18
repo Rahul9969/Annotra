@@ -47,6 +47,12 @@ class ProjectCreate(BaseModel):
     class_names: list[str] | None = None
 
 
+class ImportDatasetRequest(BaseModel):
+    """Open a YOLO / COCO / VOC / CSV export (or plain image folder) as an Annotra project."""
+    dataset_path: str
+    name: str | None = None
+
+
 class ProjectOut(BaseModel):
     id: int
     name: str
@@ -85,6 +91,7 @@ class AnnotateRequest(BaseModel):
     project_id: int | None = None
     # When files live on collaborator PC only — raw base64 image bytes (no data: prefix)
     image_base64: str | None = None
+    ai_settings: dict[str, Any] | None = None
 
 
 class ShareTokenResponse(BaseModel):
@@ -138,6 +145,7 @@ class BatchStartRequest(BaseModel):
     skip_annotated: bool = True
     thread_pool_size: int | None = None
     prompts: list[str] | None = None
+    pipeline_mode: str | None = None
 
 
 class BatchStatus(BaseModel):
@@ -171,6 +179,8 @@ class AISettings(BaseModel):
     custom_yolo: str | None = None
     enable_dino: bool = False
     enable_sam: bool = False
+    annotation_mode: str = "both"  # "bounding_box", "segmentation", "both"
+    pipeline_mode: str = "ensemble"  # "ensemble" or "smart_cv"
     enable_clip: bool = False
 
 

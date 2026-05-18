@@ -13,10 +13,12 @@ import type { ProjectInfo } from '../types';
 export default function Dashboard({
   onOpenProject,
   onCreateNew,
+  onImportDataset,
   onCreateDrive,
 }: {
   onOpenProject: (projectId: number, collaborationLocalRoot: string | null) => Promise<void>;
   onCreateNew: () => void;
+  onImportDataset: () => void;
   onCreateDrive: (projectId: number) => Promise<void>;
 }) {
   const [projects, setProjects] = useState<ProjectInfo[]>([]);
@@ -213,6 +215,19 @@ export default function Dashboard({
         </button>
         <button
           type="button"
+          onClick={onImportDataset}
+          disabled={!localFolderAvailable()}
+          title={
+            localFolderAvailable()
+              ? 'Open YOLO, COCO, VOC, CSV, or Annotra export for editing'
+              : 'Requires the desktop app'
+          }
+          className="text-xs px-3 py-1.5 rounded border border-ocean-teal/50 text-ocean-teal hover:bg-ocean-teal/10 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Import dataset
+        </button>
+        <button
+          type="button"
           onClick={() => refresh()}
           className="text-xs px-3 py-1.5 rounded border border-ocean-border hover:bg-ocean-deep"
           disabled={loading}
@@ -234,7 +249,7 @@ export default function Dashboard({
             <p className="text-gray-400 text-sm mb-4">
               {isCloudBrowser()
                 ? 'Create a project from a Google Drive folder link (local disk folders need the desktop app).'
-                : 'Create a project from a local folder or a Google Drive folder link (no local copy required).'}
+                : 'Open a local folder, import an exported dataset (YOLO / COCO / VOC / CSV), or use Google Drive.'}
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               <button
@@ -249,6 +264,15 @@ export default function Dashboard({
                 className="text-sm px-4 py-2 rounded bg-ocean-teal text-ocean-deep font-medium disabled:opacity-40"
               >
                 Local folder
+              </button>
+              <button
+                type="button"
+                onClick={onImportDataset}
+                disabled={!localFolderAvailable()}
+                title="YOLO, COCO, VOC, CSV, or Annotra export"
+                className="text-sm px-4 py-2 rounded border border-ocean-teal/50 text-ocean-teal disabled:opacity-40"
+              >
+                Import dataset
               </button>
               {driveConfigured && (
                 <button

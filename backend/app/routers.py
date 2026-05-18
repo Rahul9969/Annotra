@@ -24,6 +24,7 @@ from app.database import (
 from app.database import CLASS_COLORS
 from app.batch import batch_annotator, run_batch_job
 from app.export_engine import _collect_subfolder_classes, export_dataset
+from app.import_engine import import_dataset
 from app.drive_client import (
     DRIVE_SCOPES,
     download_file_bytes,
@@ -47,6 +48,7 @@ from app.schemas import (
     BatchStartRequest,
     DriveOAuthRefresh,
     ExportRequest,
+    ImportDatasetRequest,
     LocalMirrorBody,
     ProjectCreate,
     ProjectDriveCreate,
@@ -421,6 +423,20 @@ def reindex_drive_project(
     except Exception:
         pass
     return _project_out(db, proj)
+
+
+@router.post("/projects/import-dataset")
+def import_dataset_project(body: ImportDatasetRequest, db: Session = Depends(get_db)):
+    """Import YOLO, COCO, VOC, CSV, or Annotra export folder into an editable project."""
+    path = Path(body.dataset_path)
+    if not path.is_dir():
+        raise HTTPException(400, f"Not a directory: {body.dataset_path}")
+    try:
+        return import_dataset(db, path, body.name)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    except OSError as e:
+        raise HTTPException(400, f"Cannot read dataset: {e}") from e
 
 
 @router.post("/projects", response_model=ProjectOut)
@@ -926,6 +942,7 @@ def annotate_image(
             use_all_models=True,
             project_root=project_root,
             project_name=project_name,
+            ai_settings=AISettings(**body.ai_settings) if body.ai_settings else None,
         )
     except RuntimeError as e:
         raise HTTPException(503, str(e)) from e
@@ -1106,11 +1123,15 @@ async def batch_start(
             400,
             "No images to process. Re-open your folder or click Auto on a single image.",
         )
+    ai_settings = get_ai_settings()
+    if body.pipeline_mode:
+        ai_settings.pipeline_mode = body.pipeline_mode
+
     job_id = batch_annotator.create_job(
         body.project_id,
         images,
         prompts=body.prompts,
-        ai_settings=get_ai_settings(),
+        ai_settings=ai_settings,
         drive_access_token=drive_token,
         local_mirror_path=local_mirror,
     )
@@ -1386,6 +1407,7 @@ def get_ai_settings():
         yolo_model=settings.yolo_model,
         custom_yolo=settings.custom_yolo,
         enable_sam=getattr(settings, "enable_sam", settings.enable_sam2),
+        annotation_mode=settings.annotation_mode,
     )
 
 
