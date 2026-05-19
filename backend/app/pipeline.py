@@ -327,7 +327,16 @@ def _merge_partial_detections(
             if max(area_i, area_j) / max(1.0, min(area_i, area_j)) > 3.5:
                 continue
                 
-            if iou >= iou_link or ioa >= ioa_link:
+            pad_i_x = (boxes[i][2] - boxes[i][0]) * 0.15
+            pad_i_y = (boxes[i][3] - boxes[i][1]) * 0.15
+            pad_j_x = (boxes[j][2] - boxes[j][0]) * 0.15
+            pad_j_y = (boxes[j][3] - boxes[j][1]) * 0.15
+            
+            exp_i = np.array([boxes[i][0]-pad_i_x, boxes[i][1]-pad_i_y, boxes[i][2]+pad_i_x, boxes[i][3]+pad_i_y])
+            exp_j = np.array([boxes[j][0]-pad_j_x, boxes[j][1]-pad_j_y, boxes[j][2]+pad_j_x, boxes[j][3]+pad_j_y])
+            exp_iou, exp_ioa, _ = _box_metrics(exp_i, exp_j)
+            
+            if iou >= iou_link or ioa >= ioa_link or exp_iou >= 0.12 or exp_ioa >= 0.50:
                 cluster.append(j)
                 used[j] = True
         if len(cluster) == 1:
@@ -566,15 +575,15 @@ def postprocess_detections(
     def _fuse_primary(detections: list[EnsembleDetection]) -> list[EnsembleDetection]:
         if len(detections) < 2:
             return list(detections)
-        # Tighten link thresholds to prevent distinct, adjacent fish in a school 
-        # from being incorrectly merged into one giant envelope.
+        # Use balanced link thresholds to merge fragments (head/tail/body) 
+        # without incorrectly merging distinct adjacent fish in a school.
         merged = _merge_partial_detections(
             detections, 
             image_w=width, 
             image_h=height, 
-            iou_link=0.35, 
-            ioa_link=0.75,
-            max_union_area_ratio=min(max_area, 0.38)
+            iou_link=0.12,  # Permissive enough for fragments that barely touch
+            ioa_link=0.55,
+            max_union_area_ratio=min(max_area, 0.45)
         )
         return nms_fusion(merged, fusion_iou)[:max_det]
 
@@ -670,7 +679,8 @@ def postprocess_detections(
     )
 
     use_fallback = settings.enable_detection_fallback or settings.folder_empty_fallback
-    if not fused and use_fallback:
+    force_cv = getattr(cfg, "pipeline_mode", "ensemble") == "smart_cv"
+    if (not fused and use_fallback) or force_cv:
         label = folder_class if folder_class else "fish"
         try:
             fused = [_fallback_detection(image_np, label)]
@@ -761,10 +771,10 @@ def postprocess_detections(
     # --- Final Polish: Remove 'School' / Container Boxes ---
     # If a giant box encloses 2 or more smaller boxes, it's a container (school of fish).
     # The user wants individual annotations, so we strip these containers out.
-    final_fused = []
+    to_drop = set()
     for i, d1 in enumerate(fused):
         area1 = (d1.w * d1.h)
-        contained_count = 0
+        contained = []
         for j, d2 in enumerate(fused):
             if i == j: continue
             area2 = (d2.w * d2.h)
@@ -778,13 +788,26 @@ def postprocess_detections(
                 inter = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
                 # If d2 is at least 85% inside d1, it counts as contained
                 if inter / max(1.0, area2) >= 0.85:
-                    contained_count += 1
+                    contained.append(j)
         
-        # If it encloses multiple distinct objects, it's a generic container, drop it.
-        if contained_count >= 2:
+        if len(contained) >= 1:
+            total_contained_area = sum((fused[k].w * fused[k].h) for k in contained)
+            if total_contained_area / max(1.0, area1) < 0.35:
+                # The contained boxes are tiny fragments (e.g., fins or tail).
+                # The big box is the actual fish. Drop all fragments!
+                for k in contained:
+                    to_drop.add(k)
+            else:
+                # The contained boxes take up a significant portion of the big box.
+                # This implies the big box is a school container or an overly loose box.
+                # Drop the big box, keep the contained ones.
+                to_drop.add(i)
+                
+    final_fused = []
+    for i, d1 in enumerate(fused):
+        if i in to_drop:
             continue
-            
-        # NEW: Active Splitting of Giant AI Boxes
+        area1 = (d1.w * d1.h)
         # If the AI model naturally output a single giant box for a school of fish,
         # we must break it up manually using CV, because the user wants individual boxes.
         img_area = width * height
@@ -876,13 +899,18 @@ def run_pipeline(
 
     use_all = settings.auto_use_all_models if use_all_models is None else use_all_models
     fast_path = _use_fast_folder_path(folder_class) and not use_all
-    all_dets, timing = ensemble.predict_all(
-        str(path),
-        conf=predict_conf,
-        max_det=max_det,
-        folder_class=folder_class,
-        fast_folder=fast_path,
-    )
+    
+    if getattr(cfg, "pipeline_mode", "ensemble") == "smart_cv":
+        all_dets = []
+        timing = {"smart_cv_bypass": 1.0}
+    else:
+        all_dets, timing = ensemble.predict_all(
+            str(path),
+            conf=predict_conf,
+            max_det=max_det,
+            folder_class=folder_class,
+            fast_folder=fast_path,
+        )
     timing["fast_folder_path"] = 1.0 if fast_path else 0.0
     timing["use_all_models"] = 1.0 if use_all else 0.0
     fused, post_timing = postprocess_detections(

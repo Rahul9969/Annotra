@@ -243,11 +243,13 @@ def _parse_yolo_dataset(root: Path) -> tuple[list[ParsedImage], list[str]]:
                     ann = _parse_yolo_label_line(line, class_names, w, h)
                     if ann:
                         parsed.annotations.append(ann)
-            if parsed.annotations and class_names:
+            sp = species_from_image_path(str(img_path), str(root))
+            if sp != "unknown":
+                parsed.species_class = sp
+            elif parsed.annotations and class_names:
                 parsed.species_class = parsed.annotations[0].class_name
             else:
-                sp = species_from_image_path(str(img_path), str(root))
-                parsed.species_class = sp if sp != "unknown" else "unknown"
+                parsed.species_class = "unknown"
             images.append(parsed)
     if not class_names:
         found: set[str] = set()

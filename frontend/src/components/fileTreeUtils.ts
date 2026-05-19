@@ -1,13 +1,48 @@
 import type { ImageItem, ImageStatus } from '../types';
 
+const GENERIC_GROUP = new Set(['unknown', 'uncategorized', 'unclassified', 'misc', 'other']);
+
 export function speciesGroupKey(im: ImageItem): string {
   if (im.species_class?.trim()) return im.species_class.trim();
   const rel = im.rel_path?.replace(/\\/g, '/');
   if (rel) {
     const parts = rel.split('/').filter(Boolean);
-    if (parts.length > 1) return parts[0];
+    if (parts.length > 1) {
+      const parent = parts[parts.length - 2];
+      if (parent && !['train', 'val', 'test', 'images'].includes(parent.toLowerCase())) {
+        return parent;
+      }
+    }
+    const fname = parts[parts.length - 1] ?? '';
+    const m = fname.match(/^([a-z][a-z0-9]*_[a-z][a-z0-9]*)/i);
+    if (m) return m[1];
   }
   return 'Uncategorized';
+}
+
+/** Default class for new boxes — prefer current image folder, not classes[0]. */
+export function resolveDefaultClassName(
+  im: ImageItem | null,
+  classNames: { name: string }[],
+  existingAnnClass?: string,
+): string {
+  const pick = (name: string) => {
+    const n = name.trim();
+    if (!n || GENERIC_GROUP.has(n.toLowerCase())) return null;
+    if (classNames.some((c) => c.name === n)) return n;
+    return n;
+  };
+  if (im) {
+    const fromSpecies = pick(im.species_class ?? '');
+    if (fromSpecies) return fromSpecies;
+    const fromGroup = pick(speciesGroupKey(im));
+    if (fromGroup) return fromGroup;
+  }
+  if (existingAnnClass) {
+    const fromAnn = pick(existingAnnClass);
+    if (fromAnn) return fromAnn;
+  }
+  return classNames[0]?.name ?? 'fish';
 }
 
 export function imageFileName(im: ImageItem): string {
@@ -59,6 +94,19 @@ export function buildSpeciesGroups(images: ImageItem[], search: string): Species
       key,
       items: items.sort((x, y) => imageFileName(x.image).localeCompare(imageFileName(y.image))),
     }));
+}
+
+/** Flat image indices in sidebar order (folder sort → filename sort within folder). */
+export function buildFlatNavigationOrder(
+  images: ImageItem[],
+  search: string,
+  expanded: Set<string>,
+): number[] {
+  const groups = buildSpeciesGroups(images, search);
+  const rows = buildVisibleRows(groups, expanded);
+  return rows
+    .filter((r): r is Extract<TreeRow, { kind: 'file' }> => r.kind === 'file')
+    .map((r) => r.imageIndex);
 }
 
 export function buildVisibleRows(groups: SpeciesGroup[], expanded: Set<string>): TreeRow[] {

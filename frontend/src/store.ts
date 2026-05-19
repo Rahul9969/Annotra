@@ -71,6 +71,7 @@ export const useStore = create<AppState>((set, get) => ({
     device: 'auto',
     half_precision: true,
     yolo_model: 'yolov8n.pt',
+    annotation_mode: 'both',
   },
   showLabels: true,
   showBoxes: true,

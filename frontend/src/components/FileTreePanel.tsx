@@ -24,13 +24,16 @@ function rowHeight(row: TreeRow): number {
 
 export default function FileTreePanel({
   search,
+  expanded,
+  onExpandedChange,
   onSelect,
 }: {
   search: string;
+  expanded: Set<string>;
+  onExpandedChange: (next: Set<string>) => void;
   onSelect: (index: number) => void;
 }) {
   const { images, currentImageIndex, imagesTotal } = useStore();
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<List>(null);
   const [listHeight, setListHeight] = useState(320);
@@ -57,38 +60,27 @@ export default function FileTreePanel({
   }, [rows]);
 
   useEffect(() => {
-    const cur = images[currentImageIndex];
-    if (!cur) return;
-    const key = speciesGroupKey(cur);
-    setExpanded((prev) => {
-      if (prev.has(key)) return prev;
-      const next = new Set(prev);
-      next.add(key);
-      return next;
-    });
-  }, [currentImageIndex, images]);
-
-  useEffect(() => {
     if (!search.trim()) return;
-    setExpanded(new Set(groups.map((g) => g.key)));
-  }, [search, groups]);
+    onExpandedChange(new Set(groups.map((g) => g.key)));
+  }, [search, groups, onExpandedChange]);
 
   useEffect(() => {
     const idx = rows.findIndex((r) => r.kind === 'file' && r.imageIndex === currentImageIndex);
     if (idx >= 0) listRef.current?.scrollToItem(idx, 'smart');
   }, [currentImageIndex, rows]);
 
-  const toggleFolder = useCallback((key: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
+  const toggleFolder = useCallback(
+    (key: string) => {
+      const next = new Set(expanded);
       if (next.has(key)) next.delete(key);
       else next.add(key);
-      return next;
-    });
-  }, []);
+      onExpandedChange(next);
+    },
+    [expanded, onExpandedChange],
+  );
 
-  const expandAll = () => setExpanded(new Set(groups.map((g) => g.key)));
-  const collapseAll = () => setExpanded(new Set());
+  const expandAll = () => onExpandedChange(new Set(groups.map((g) => g.key)));
+  const collapseAll = () => onExpandedChange(new Set());
 
   if (!images.length) {
     return <p className="p-3 text-xs text-gray-500">No images — open a folder</p>;

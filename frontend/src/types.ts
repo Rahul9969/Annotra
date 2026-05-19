@@ -61,6 +61,7 @@ export interface AISettings {
   yolo_model: string;
   enable_dino?: boolean;
   enable_sam?: boolean;
+  annotation_mode?: 'bounding_box' | 'segmentation' | 'both';
   enable_clip?: boolean;
 }
 

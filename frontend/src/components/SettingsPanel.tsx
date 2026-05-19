@@ -68,13 +68,17 @@ export default function SettingsPanel({ onClose }: { onClose: () => void }) {
               className="w-full mt-1 bg-ocean-deep border border-ocean-border rounded px-2 py-1"
             />
           </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={aiSettings.enable_sam}
-              onChange={(e) => setAISettings({ ...aiSettings, enable_sam: e.target.checked })}
-            />
-            Refine with SAM2 Segmentation
+          <label className="block">
+            Annotation Mode
+            <select
+              value={aiSettings.annotation_mode || 'both'}
+              onChange={(e) => setAISettings({ ...aiSettings, annotation_mode: e.target.value as any })}
+              className="w-full mt-1 bg-ocean-deep border border-ocean-border rounded px-2 py-1"
+            >
+              <option value="bounding_box">Bounding Box Only (Faster)</option>
+              <option value="segmentation">Segmentation Only (Masks)</option>
+              <option value="both">Both (Boxes & Masks)</option>
+            </select>
           </label>
           <label className="flex items-center gap-2">
             <input

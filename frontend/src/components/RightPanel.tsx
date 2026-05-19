@@ -183,7 +183,7 @@ export default function RightPanel() {
               className="flex-1 py-1 rounded bg-red-900/40 border border-red-800 text-xs"
               onClick={removeSelected}
             >
-              Delete
+              Delete (Del / PgDn)
             </button>
           </div>
 

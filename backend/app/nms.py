@@ -35,6 +35,15 @@ def _box_metrics(a: np.ndarray, b: np.ndarray) -> tuple[float, float, float]:
 
 def boxes_overlap(a: np.ndarray, b: np.ndarray, iou_thresh: float) -> bool:
     iou, ioa, center_dist = _box_metrics(a, b)
+    area_a = (a[2] - a[0]) * (a[3] - a[1])
+    area_b = (b[2] - b[0]) * (b[3] - b[1])
+    area_ratio = max(area_a, area_b) / max(1.0, min(area_a, area_b))
+    
+    # If one box is massively larger than the other (e.g. a school vs an individual fish),
+    # do NOT merge them, they are distinct hierarchical detections.
+    if area_ratio > 3.5:
+        return False
+        
     if iou >= iou_thresh or ioa >= 0.72:
         return True
     if center_dist < 0.22 and iou >= 0.15:

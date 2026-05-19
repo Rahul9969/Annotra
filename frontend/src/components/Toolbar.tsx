@@ -26,6 +26,7 @@ interface ToolbarProps {
   onSave: () => void;
   onAutoAnnotate: () => void;
   onBatchAnnotate: () => void;
+  onSmartBatch: () => void;
   onExport: () => void;
   onSettings: () => void;
   onStats: () => void;
@@ -51,6 +52,7 @@ export default function Toolbar({
   onSave,
   onAutoAnnotate,
   onBatchAnnotate,
+  onSmartBatch,
   onExport,
   onSettings,
   onStats,
@@ -174,6 +176,20 @@ export default function Toolbar({
         }`}
       >
         Batch
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          if (!aiDisabled) onSmartBatch();
+        }}
+        disabled={aiDisabled}
+        aria-disabled={aiDisabled}
+        title={aiDisabled ? autoTitle.replace('Auto', 'Smart Batch') : 'Smart Batch: Pure CV + SAM pipeline'}
+        className={`px-2 py-1 rounded text-xs transition text-cyan-300 ${
+          aiDisabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'hover:bg-ocean-deep'
+        }`}
+      >
+        ✦ Smart Batch
       </button>
       {aiDisabled && statusLabel && (
         <span

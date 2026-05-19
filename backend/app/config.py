@@ -86,6 +86,7 @@ class Settings(BaseSettings):
     enable_sam2: bool = False
     sam2_model: str = "sam2.1_b.pt"
     sam2_refine_boxes: bool = True
+    annotation_mode: str = "both"  # bounding_box, segmentation, both
 
     # Batch: accurate mode = same fusion as single-image Auto (all models + rescue + box expand)
     batch_fast_mode: bool = True

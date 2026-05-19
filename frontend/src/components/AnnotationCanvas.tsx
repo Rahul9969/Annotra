@@ -3,6 +3,7 @@ import { Circle, Group, Image as KonvaImage, Layer, Line, Rect, Stage, Text, Tra
 import type Konva from 'konva';
 import { api } from '../api';
 import { bboxFromPolygon, buildSegmentImagePayload } from '../segmentPayload';
+import { resolveDefaultClassName } from './fileTreeUtils';
 import { useStore } from '../store';
 import type { BBox } from '../types';
 
@@ -137,11 +138,8 @@ export default function AnnotationCanvas() {
 
   const classColor = (name: string) => classes.find((c) => c.name === name)?.color ?? '#FF2D95';
   const defaultClass = () => {
-    const fromList = classes[0]?.name;
-    if (fromList) return fromList;
-    const fromAnn = useStore.getState().annotations[0]?.class_name;
-    if (fromAnn && fromAnn !== 'unknown') return fromAnn;
-    return 'fish';
+    const { currentImage: cur, annotations: anns } = useStore.getState();
+    return resolveDefaultClassName(cur, classes, anns[0]?.class_name);
   };
 
   const fromStage = useCallback(
@@ -171,8 +169,7 @@ export default function AnnotationCanvas() {
       source: res.source,
     };
     const prev = useStore.getState().annotations;
-    const withoutAuto = prev.filter((a) => !isSegmentSource(a.source) || a.locked);
-    setAnnotations([...withoutAuto, ann]);
+    setAnnotations([...prev, ann]);
     selectAnnotation(ann.id!);
   };
 
@@ -375,6 +372,8 @@ export default function AnnotationCanvas() {
                   ? poly.flatMap((p) => [pan.x + p[0] * zoom, pan.y + p[1] * zoom])
                   : null;
               const strokeW = Math.max(2, 2.5 / Math.max(zoom, 0.15));
+              const showStroke = !polyPts || useStore.getState().aiSettings.annotation_mode !== 'segmentation' || selected;
+
               return (
                 <Group key={id}>
                   {polyPts && (
@@ -417,11 +416,11 @@ export default function AnnotationCanvas() {
                     width={bw}
                     height={bh}
                     stroke={color}
-                    strokeWidth={selected ? 3 : 2}
+                    strokeWidth={showStroke ? (selected ? 3 : 2) : 0}
                     fillEnabled={false}
                     shadowColor={color}
                     shadowBlur={selected ? 8 : 4}
-                    shadowOpacity={0.35}
+                    shadowOpacity={showStroke ? 0.35 : 0}
                     onTransformEnd={(e) => {
                       const node = e.target;
                       const scaleX = node.scaleX();

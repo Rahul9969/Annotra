@@ -10,6 +10,7 @@ import ExportPanel from './components/ExportPanel';
 import SettingsPanel from './components/SettingsPanel';
 import Toolbar from './components/Toolbar';
 import { getValidDriveAccessToken, isDriveProject } from './driveAuth';
+import { buildFlatNavigationOrder, buildSpeciesGroups, speciesGroupKey } from './components/fileTreeUtils';
 import { rawBase64FromDataUrl, resolveImageDisplaySrc, resolveImageDiskPath } from './imagePath';
 import { useKeyboard } from './hooks/useKeyboard';
 import { useModelHealth } from './hooks/useModelHealth';
@@ -42,6 +43,7 @@ export default function App() {
 
   const [route, setRoute] = useState<'dashboard' | 'workspace'>('dashboard');
   const [search, setSearch] = useState('');
+  const [treeExpanded, setTreeExpanded] = useState<Set<string>>(() => new Set());
   const [stats, setStats] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const { modelState, modelsLoaded, modelError, modelsReady, backendOk } = useModelHealth();
@@ -185,7 +187,13 @@ export default function App() {
           }
         }
         const { items, total } = await api.listAllImages(projectId);
-        setImages(items, total);
+        try {
+          await api.reindexSpecies(projectId);
+        } catch {
+          /* non-fatal */
+        }
+        const { items: refreshedItems, total: refreshedTotal } = await api.listAllImages(projectId);
+        setImages(refreshedItems, refreshedTotal);
         const cls = await api.listClasses(projectId);
         setClasses(cls);
         setRoute('workspace');
@@ -477,12 +485,37 @@ export default function App() {
     }
   };
 
+  useEffect(() => {
+    const cur = images[currentImageIndex];
+    if (!cur) return;
+    const key = speciesGroupKey(cur);
+    setTreeExpanded((prev) => {
+      if (prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.add(key);
+      return next;
+    });
+  }, [currentImageIndex, images]);
+
   const goPrev = () => {
-    if (currentImageIndex > 0) void navigateToImage(currentImageIndex - 1);
+    const { images: imgs, currentImageIndex: cur } = useStore.getState();
+    const treeOrder = buildFlatNavigationOrder(imgs, search, treeExpanded);
+    const pos = treeOrder.indexOf(cur);
+    const target = pos > 0 ? treeOrder[pos - 1] : cur > 0 ? cur - 1 : null;
+    if (target != null) void navigateToImage(target);
   };
 
   const goNext = () => {
-    if (currentImageIndex < images.length - 1) void navigateToImage(currentImageIndex + 1);
+    const { images: imgs, currentImageIndex: cur } = useStore.getState();
+    const treeOrder = buildFlatNavigationOrder(imgs, search, treeExpanded);
+    const pos = treeOrder.indexOf(cur);
+    const target =
+      pos >= 0 && pos < treeOrder.length - 1
+        ? treeOrder[pos + 1]
+        : cur < imgs.length - 1
+          ? cur + 1
+          : null;
+    if (target != null) void navigateToImage(target);
   };
 
   const deleteSelected = () => {
@@ -583,7 +616,12 @@ export default function App() {
           )}
 
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            <FileTreePanel search={search} onSelect={(i) => void navigateToImage(i)} />
+            <FileTreePanel
+              search={search}
+              expanded={treeExpanded}
+              onExpandedChange={setTreeExpanded}
+              onSelect={(i) => void navigateToImage(i)}
+            />
           </div>
         </aside>
 

@@ -280,13 +280,18 @@ class ModelEnsemble:
                         xyxy = box.xyxy[0].cpu().numpy()
                         cls_id = int(box.cls[0])
                         score = float(box.conf[0])
-                        if source == "open_vocab" and class_names:
-                            raw_label = class_names[cls_id] if cls_id < len(class_names) else names.get(cls_id, "fish")
+                        if isinstance(names, dict):
+                            model_name = names.get(cls_id, "fish")
+                        elif isinstance(names, list) and cls_id < len(names):
+                            model_name = names[cls_id]
                         else:
-                            raw_label = names.get(
-                                cls_id,
-                                class_names[cls_id] if cls_id < len(class_names) else f"class_{cls_id}",
-                            )
+                            model_name = "fish"
+                            
+                        if source == "open_vocab" and class_names:
+                            raw_label = class_names[cls_id] if cls_id < len(class_names) else model_name
+                        else:
+                            fallback = class_names[cls_id] if cls_id < len(class_names) else f"class_{cls_id}"
+                            raw_label = model_name if model_name != "fish" else fallback
                         raw_label = str(raw_label)
                         name = get_catalog().resolve_label(raw_label)
                         x1, y1, x2, y2 = xyxy
@@ -459,10 +464,13 @@ class ModelEnsemble:
                         xyxy = box.xyxy[0].cpu().numpy()
                         cls_id = int(box.cls[0])
                         score = float(box.conf[0])
-                        raw_label = names.get(
-                            cls_id,
-                            class_names[cls_id] if cls_id < len(class_names) else f"class_{cls_id}",
-                        )
+                        fallback_name = class_names[cls_id] if cls_id < len(class_names) else f"class_{cls_id}"
+                        if isinstance(names, dict):
+                            raw_label = names.get(cls_id, fallback_name)
+                        elif isinstance(names, list) and cls_id < len(names):
+                            raw_label = names[cls_id]
+                        else:
+                            raw_label = fallback_name
                         raw_label = str(raw_label)
                         name = get_catalog().resolve_label(raw_label)
                         x1, y1, x2, y2 = xyxy

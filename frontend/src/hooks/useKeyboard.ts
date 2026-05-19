@@ -84,7 +84,15 @@ export function useKeyboard(handlers: {
         return;
       }
       if (e.key === 'f' || e.key === 'F') handlers.onFit();
-      if (e.key === 'Delete') handlers.onDelete();
+      if (e.key === 'Delete') {
+        handlers.onDelete();
+        return;
+      }
+      if (e.key === 'PageDown' && selectedId != null) {
+        e.preventDefault();
+        handlers.onDelete();
+        return;
+      }
       if (e.key === 'h' || e.key === 'H') useStore.setState({ showBoxes: !showBoxes });
       if (e.key === 'l' || e.key === 'L') useStore.setState({ showLabels: !showLabels });
       if (e.key === 'Tab') {

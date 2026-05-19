@@ -1,6 +1,7 @@
 """Derive species class from folder layout: root/<SpeciesName>/image.jpg"""
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 # Generic buckets — not a species label for folder_primary / open-vocab hints
@@ -68,10 +69,28 @@ def is_valid_species_folder(name: str | None, project_name: str | None = None) -
     return True
 
 
+def species_from_filename(stem: str) -> str | None:
+    """
+    YOLO export layout: images/train/gymnothorax_undulatus_image_boost_63.jpg
+    -> gymnothorax_undulatus
+    """
+    s = stem.strip().lower()
+    if not s:
+        return None
+    m = re.match(r"^([a-z][a-z0-9]*_[a-z][a-z0-9]*)", s)
+    if not m:
+        return None
+    candidate = m.group(1)
+    if candidate in SKIP_FOLDER_NAMES or candidate in GENERIC_FOLDER_NAMES:
+        return None
+    return candidate
+
+
 def species_from_image_path(image_path: str, project_root: str | None = None) -> str:
     """
     Class name = immediate parent folder of the image file.
     e.g. D:/dataset/Clownfish/photo.jpg -> Clownfish
+  When parent is train/val/test, infer genus_species from filename.
     """
     p = Path(image_path)
     proj_name = Path(project_root).name if project_root else None
@@ -91,6 +110,10 @@ def species_from_image_path(image_path: str, project_root: str | None = None) ->
                 return parts[-1].strip()
         except ValueError:
             pass
+
+    from_name = species_from_filename(p.stem)
+    if from_name and is_valid_species_folder(from_name, proj_name):
+        return from_name
 
     return "unknown"
 

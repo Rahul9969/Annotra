@@ -221,6 +221,7 @@ class BatchAnnotator:
                         h=a["h"],
                         rotation=a.get("rotation", 0),
                         source=a.get("source", "ai"),
+                        polygon=a.get("polygon"),
                         attributes=a.get("attributes", {}),
                     )
                 )
@@ -254,6 +255,7 @@ class BatchAnnotator:
                             h=a["h"],
                             rotation=a.get("rotation", 0),
                             source=a.get("source", "ai"),
+                            polygon=a.get("polygon"),
                             attributes=a.get("attributes", {}),
                         )
                     )
