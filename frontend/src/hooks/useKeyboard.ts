@@ -84,13 +84,16 @@ export function useKeyboard(handlers: {
         return;
       }
       if (e.key === 'f' || e.key === 'F') handlers.onFit();
-      if (e.key === 'Delete') {
-        handlers.onDelete();
-        return;
-      }
-      if (e.key === 'PageDown' && selectedId != null) {
-        e.preventDefault();
-        handlers.onDelete();
+
+      const isPageDown = e.code === 'PageDown' || e.key === 'PageDown';
+      const isDeleteKey = e.key === 'Delete' || e.code === 'Delete';
+      if (isDeleteKey || isPageDown) {
+        const { selectedId: sid } = useStore.getState();
+        if (sid != null) {
+          e.preventDefault();
+          e.stopPropagation();
+          handlers.onDelete();
+        }
         return;
       }
       if (e.key === 'h' || e.key === 'H') useStore.setState({ showBoxes: !showBoxes });
@@ -103,7 +106,7 @@ export function useKeyboard(handlers: {
         selectAnnotation(ids[(idx + 1) % ids.length]);
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [handlers, annotations, selectedId, setTool, undo, redo, selectAnnotation, showBoxes, showLabels, setAnnotations]);
 }

@@ -518,10 +518,13 @@ export default function App() {
     if (target != null) void navigateToImage(target);
   };
 
-  const deleteSelected = () => {
-    if (selectedId == null) return;
-    setAnnotations(annotations.filter((a, i) => (a.id ?? i) !== selectedId));
-  };
+  const deleteSelected = useCallback(() => {
+    const { selectedId: sid, annotations: anns, setAnnotations: setAnns, selectAnnotation } =
+      useStore.getState();
+    if (sid == null) return;
+    setAnns(anns.filter((a, i) => (a.id ?? i) !== sid), true);
+    selectAnnotation(null);
+  }, []);
 
   useKeyboard({
     onPrev: goPrev,
